@@ -12,7 +12,8 @@ from scipy.special import binom
 
            
 def insert_border(ospace,d):
-	shape=ospace.shape
+	shape=ospace.shape #the size of the array(tuple)
+	
 	arena=np.zeros_like(ospace)
 	for i in xrange(shape[0]):
 		for j in xrange(shape[1]):
@@ -38,12 +39,14 @@ def distanceTogoal(pose,goal):
 		
 def getimage(d):
 	m= misc.imread('path5.png')
-	ospace=np.zeros(m.shape[0]*m.shape[1]).reshape(m.shape[0],m.shape[1])
+	#ospace=np.zeros(m.shape[0]*m.shape[1]).reshape(m.shape[0],m.shape[1]) 
+	ospace=np.zeros((m.shape[0], m.shape[1]))
 	for i in xrange(m.shape[0]):
 		for j in xrange(m.shape[1]):
-			ospace[i,j]=-float(m[i,j][0])*d/255.0+d
-	#plt.imshow(ospace,interpolation='nearest')
-	#show()
+			ospace[i,j]=-float(m[i,j,0])*d/255.0+d
+	print type(ospace[0][0])
+	plt.imshow(ospace,interpolation='nearest')
+	show()
 	return m,ospace
 	
 def planner1(start,goal,ospace):
@@ -104,7 +107,7 @@ def planner3(start,goal,ospace):
 	front=[]
 	visited=[]
 	space=np.zeros_like(ospace)
-	heappush(front,(0.00001,0.00001,start,None))
+	heappush(front,(0.00001,0.00001,start,None)) #uses a min heap 
 	pose=start
 	path={}
 	while(pose!=goal):
@@ -119,8 +122,7 @@ def planner3(start,goal,ospace):
 				r=distanceTogoal(new_pose,goal)
 				total_cost=r+new_cost
 				if (new_pose[0]>=0 and new_pose[0]<space.shape[1]) and (new_pose[1]>=0 and new_pose[1]<space.shape[0]):
-					if ospace[int(new_pose[1]),int(new_pose[0])]==255.0:
-						heappush(front,(total_cost,new_cost,new_pose,pre_pose))	
+					heappush(front,(total_cost,new_cost,new_pose,pre_pose))	
 	trajectory=[]
 	if pose==goal:
 		while pose:
@@ -131,9 +133,9 @@ def planner3(start,goal,ospace):
 
 def planner(start,goal,ospace,d):
 	r=1.0 #resolution
-	neighbours=[[r,0,r],[0,r,r],[-r,0,r],[0,-r,r],[r,r,r*sqrt(2)],[-r,r,r*sqrt(2)],[-r,-r,r*sqrt(2)],[r,-r,r*sqrt(2)]] # x,y,cost
-	front=[]
-	visited=[]
+	neighbours=[[r,0,r],[0,r,r],[-r,0,r],[0,-r,r],[r,r,r*sqrt(2)],[-r,r,r*sqrt(2)],[-r,-r,r*sqrt(2)],[r,-r,r*sqrt(2)]] # x,y,cost (8 neighbours of the current position)
+	front=[] #open list
+	visited=[] #close list
 	space=np.zeros_like(ospace)
 	heappush(front,(0.00001,0.00001,start,None))
 	pose=start
@@ -158,8 +160,8 @@ def planner(start,goal,ospace,d):
 			trajectory.append(pose)
 			pose=path[pose]
 		trajectory.reverse()
-	#plt.imshow(space,interpolation='nearest')
-	#show()
+	plt.imshow(space,interpolation='nearest')
+	show()
 	return visited,space,trajectory				
 	
 if __name__ == '__main__':
@@ -169,8 +171,8 @@ if __name__ == '__main__':
 	goal=(15,1)
 	#goal=(330,50)
 	d=3
-	m,ospace=getimage(d)
-	arena=insert_border(ospace,d)
+	m,ospace=getimage(d) #gets image and colours all the empty spots blue
+	arena=insert_border(ospace,d) #adjusts the costs 
 	trajectory=[]
 
 	#visited,space=planner1(start,goal,ospace)
@@ -181,6 +183,9 @@ if __name__ == '__main__':
 	for p in trajectory:
 		x.append(p[0])
 		y.append(p[1])
+	print str(x[2])
+	print str(x[3])
+	
 	plt.imshow(m,interpolation='nearest')
 	plt.scatter(start[0],start[1],c='r', s=40)
 	plt.scatter(goal[0],goal[1],c='g', s=40)

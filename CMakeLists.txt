@@ -71,6 +71,8 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    std_msgs
+   geometry_msgs
+   nav_msgs
  )
 
 ################################################
@@ -105,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES trajectory_planner
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -191,3 +193,7 @@ include_directories(
 # catkin_add_nosetests(test)
 #target_link_libraries(trajectory_planner ${catkin_LIBRARIES})
 #add_dependencies(trajectory_planner trajectory_planner_generate_messages_cpp)
+
+add_executable(imagePublisher scripts/Publishingnode.cpp)
+target_link_libraries(imagePublisher ${catkin_LIBRARIES})
+add_dependencies(imagePublisher trajectory_planner_generate_messages_cpp)

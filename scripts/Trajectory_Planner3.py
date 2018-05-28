@@ -21,15 +21,18 @@ def show_pose(x,y,theta,gx,gy,d):
 def Bernstein(n, k):
     coeff = binom(n, k)
     def _bpoly(x):
-        return coeff * x ** k * (1 - x) ** (n - k)
+		return coeff * x ** k * (1 - x) ** (n - k)
     return _bpoly
 
 def Bezier(points, num=200):
-    N = len(points)
-    t = np.linspace(0, 1, num=num)
-    curve = np.zeros((num, 2))
+    N = len(points) #length of the list
+    t = np.linspace(0, 1, num=num) #creates interval between 0 and 1 with 200 samples
+    print t
+    print type(t[0])
+    curve = np.zeros((num, 2)) # creates a 200 rows by 2 column array filled with zeros
     for ii in range(N):
-        curve += np.outer(Bernstein(N - 1, ii)(t), points[ii])
+		print type(Bernstein(N - 1, ii)(t)[0])
+		curve += np.outer(Bernstein(N - 1, ii)(t), points[ii])#multiplying two vectors
     return curve
     
 def end_pose(start_pose, curvature, length):
@@ -132,13 +135,13 @@ if __name__ == '__main__':
 	for p in trajectory:
 		x.append(p[0])
 		y.append(p[1])
-	xp, yp = Bezier(list(zip(x, y))).T
+	xp, yp = Bezier(list(zip(x, y))).T #transpose the list
 	plt.imshow(m,interpolation='nearest')
 	plt.scatter(start_pose[0],start_pose[1],c='r', s=40)
 	plt.scatter(goal[0],goal[1],c='g', s=40)
 	plot(x,y,color="m",label='curve_segments')
 	plt.scatter(xp,yp,label='B-spline')
-	show_pose(start_pose[0],start_pose[1],start_pose[2],goal[0],goal[1],80)
+	show_pose(start_pose[0],start_pose[1],start_pose[2],goal[0],goal[1],80)#labels for Start and goal
 	legend(loc='upper left')
 	
 	show()
