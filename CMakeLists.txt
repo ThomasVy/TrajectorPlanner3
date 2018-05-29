@@ -204,7 +204,7 @@ target_link_libraries(imagePublisher
 add_dependencies(imagePublisher trajectory_planner_generate_messages_cpp)
 
 add_executable(traject scripts/Trajectory_node.cpp)
-target_link_libraries(traject 
+target_link_libraries(traject
 			${catkin_LIBRARIES}
 			${OpenCV_LIBRARIES}
 			)

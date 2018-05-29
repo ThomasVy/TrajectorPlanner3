@@ -12,7 +12,7 @@
 #include <vector>
 using namespace std;
 using namespace cv;
-const int WALL=254; //B,G,R
+const int WALL=254; //B,G,Rf
 const int EMPTY_SPACE =150;
 const int RESOLUTION = 4;
 //trying to fixed the image translation //works good
