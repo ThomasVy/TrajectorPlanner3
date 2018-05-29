@@ -7,6 +7,7 @@
 #include <math.h>
 #include <list>
 #include <vector>
+
 using namespace std;
 using namespace cv;
 const Size SIZE(480, 360);
@@ -197,7 +198,6 @@ typedef struct Wall{
 
 class Image{
 	private:
-		String picture;
 		Mat originalImage;
 		Mat resizedImage;
 		Mat b_splineImage;
@@ -284,21 +284,11 @@ class Image{
 		
 		
 	public:
-		Image(const String& picture)
+		Image(const Mat & oriImage)
 		{
-			this->picture =picture;
+			this->originalImage = oriImage;
 			xratio = 0.0;
 			yratio = 0.0;
-		}
-		bool formImage() //gets image from folder. Returns true if found, otherwise false
-		{ 
-			originalImage =imread(picture, 0);
-			if(!originalImage.data)
-			{
-				std::cout<< "Could not find file" << std::endl;
-				return false;
-			}
-			threshold(originalImage, originalImage, 100, 255,THRESH_BINARY);
 			resize(originalImage, resizedImage, SIZE, 0,0, INTER_NEAREST);
 			xratio = (double)resizedImage.rows/originalImage.rows;
 			yratio = (double)resizedImage.cols/originalImage.cols;
@@ -315,11 +305,9 @@ class Image{
 				}
 			}
 			namedWindow( "Display window", CV_WINDOW_FREERATIO |  CV_GUI_EXPANDED);// Create a window for display.
+			namedWindow("Hello", CV_WINDOW_FREERATIO |  CV_GUI_EXPANDED);
             imshow( "Display window", originalImage );   // Show our image inside it.
-            waitKey();
-            
-            imshow("Display window", convertedImage);
-	        return true;
+            imshow("Hello", convertedImage);
 		}
 		void insert_borders ()
 		{
@@ -393,7 +381,7 @@ class Image{
 			return direct;
 			
 		}		
-		void planner (Pose & start, Pose & goal)
+		bool planner (Pose & start, Pose & goal)
 		{
 			swap(start);
 			swap(goal);
@@ -405,11 +393,9 @@ class Image{
 			openList.size();
 			Pose currentPoint;
 			while(Pose::distanceToGoal(currentPoint, goal)>1){
-				//openList is becoming empty.
 				if(openList.empty())
 				{
-					cout<<"Cannot find path with the set curvature"<<endl;
-					return;
+					return false;
 				}
 				closedList.push_back(new Position(openList.top())); 
 				currentPoint = closedList.back()->getPoint();
@@ -443,13 +429,11 @@ class Image{
 			} 
 			outimage.at<uchar>(start.x, start.y) = 10;
 			outimage.at<uchar>(goal.x, goal.y)=10;
-			
-			
-			namedWindow("Hello", CV_WINDOW_FREERATIO |  CV_GUI_EXPANDED);
 			imshow("Hello", outimage);
 			imshow("Display window", space);
-			waitKey(0);
+			waitKey();
 			Bezier(points);
+			return true;
 		}
 		void swap (Pose & point)
 		{

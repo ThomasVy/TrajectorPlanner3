@@ -4,6 +4,8 @@
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 #include "std_msgs/Header.h"
 #include <string>
 #include <iostream>
@@ -12,42 +14,33 @@ int main(int argc, char ** argv)
 {
 	ros::init(argc, argv, "PublishingNode");
 	ros::NodeHandle n;
-	ros::Rate loop_rate(10);
+	ros::Rate loop_rate(0.05);
 	ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("/imageTopic", 1000);
 	//read image 
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::MapMetaData mapData;
-	std::string imageName;
-	std::cout<<"Pls enter the image name"<<std::endl;
-	std::cin>>imageName;
-	std::ifstream file(imageName.c_str(), std::ios::binary| std::ios::in);
-	if(imageName == "QUIT"||!file)
+	std::string imageName = "/home/thomas/catkin_ws/src/trajectory_planner/scripts/path10git .png";
+	cv::Mat file = cv::imread(imageName, 0);
+	if(!file.data)
 	{
-		std::cout<<"Goodbye"<<std::endl;
+		std::cout<<"failed"<<std::endl;
 		exit(1);
 	}
-	file.seekg(0, file.end);
-	int length = file.tellg();
-	file.seekg(0, file.beg);
+	cv::threshold(file, file, 100, 255,cv::THRESH_BINARY);
+	int length = file.rows*file.cols;
+	std::vector<signed char> array(length);
 	std::cout<<"reading "<<length<<" characters"<<std::endl;
-	std::vector<signed char, std::allocator<signed char> > array(length);
-	file.read((char*)&array[0], length);
-	map.data = array;
+	for(int i =0; i<file.rows;i++)
+	{ 
+		for(int j=0; j<file.cols;j++)
+		{
+			map.data.push_back(file.at<uchar>(i,j)); 
+		}
+	}
 	mapData.map_load_time = ros::Time::now();
-	mapData.resolution = 23;
-	mapData.width = 480;
-	mapData.height = 360;
-	geometry_msgs::Point point;
-	point.x =0;
-	point.y =0;
-	point.z =0;
-	geometry_msgs::Quaternion quat;
-	quat.x =0;
-	quat.y =0;
-	quat.z=0;
-	quat.w=0;
-	mapData.origin.position = point;
-	mapData.origin.orientation = quat;
+	mapData.resolution = 4;
+	mapData.width = file.rows;
+	mapData.height = file.cols;
 	map.info = mapData;
 	int count =1;
 	while(ros::ok())
@@ -59,8 +52,9 @@ int main(int argc, char ** argv)
 		map.header = header;
 		pub.publish(map);
 		ros::spinOnce();
+		std::cout<<"sent"<<std::endl;
 		loop_rate.sleep();
 	}
-	cout<<"Shutting down"<<endl;
+	std::cout<<"Shutting down"<<std::endl;
 	return 0;
 }
