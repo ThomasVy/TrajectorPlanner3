@@ -16,7 +16,7 @@ int main(int argc, char ** argv)
 	ros::NodeHandle n;
 	ros::Rate loop_rate(0.05);
 	ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("/imageTopic", 1000);
-	//read image 
+	//read image
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::MapMetaData mapData;
 	std::string imageName = "/home/thomas/catkin_ws/src/trajectory_planner/scripts/path10.png";
@@ -31,10 +31,10 @@ int main(int argc, char ** argv)
 	std::vector<signed char> array(length);
 	std::cout<<"reading "<<length<<" characters"<<std::endl;
 	for(int i =0; i<file.rows;i++)
-	{ 
+	{
 		for(int j=0; j<file.cols;j++)
 		{
-			map.data.push_back(file.at<uchar>(i,j)); 
+			map.data.push_back(file.at<uchar>(i,j));
 		}
 	}
 	mapData.map_load_time = ros::Time::now();
@@ -43,7 +43,7 @@ int main(int argc, char ** argv)
 	mapData.height = file.cols;
 	map.info = mapData;
 	int count =1;
-	while(ros::ok())
+	while(ros::ok()&&count<3)
 	{
 		std_msgs::Header header;
 		header.seq = count++;
