@@ -15,7 +15,7 @@ int main(int argc, char ** argv)
 	ros::init(argc, argv, "PublishingNode");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(0.05);
-	ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("/imageTopic", 1000);
+	ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("imageTopic", 1000);
 	//read image
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::MapMetaData mapData;

@@ -5,7 +5,7 @@
 #include <list>
 #include <vector>
 #include <cstring>
-
+#include "geometry_msgs/PoseStamped.h"
 using namespace std;
 const int PRECISION = 2000;
 const int WALL=2; //B,G,R
@@ -199,7 +199,7 @@ typedef struct Wall{
 
 class Image{
 	private:
-		std::vector<Pose> path;
+		std::vector<geometry_msgs::PoseStamped> b_splineImage;
 		Matrix convertedImage;
 		Matrix arena;
 		Matrix oriImage;
@@ -404,18 +404,76 @@ class Image{
 				currentPose = currentPose->prePosition;
 			}
 			std::list<Position>::iterator it = finalTrail.begin();
+			vector<Pose> points;
 			while(it != finalTrail.end())
 			{
 				Pose point1((*it).getPoint());
-				path.push_back(point1);
+				points.push_back(point1);
 				it++;
 			}
-
+			Bezier(points);
 			return true;
 		}
-		const std::vector<Pose> & getBSpline ()
+		void Bezier (vector<Pose> & points, int num =PRECISION)
 		{
-			return path;
+			//b_splineImage = oriImage;
+			int firstnum = 0;
+			int endnum = 1;
+			double result = (double)(endnum -firstnum)/(num-1);
+			vector <double> arr (num); //t = np.linspace(0, 1, num=num)
+			for(int i =0;i<num; i++)
+			{
+				arr[i] =firstnum + i*result;
+			}
+			b_splineImage = vector<geometry_msgs::PoseStamped> (num);
+			for(int ii =0;ii<points.size();ii++)
+			{
+				vector<double> berst = Berstein(arr, points.size()-1, ii);
+				multipleVectors(berst, points[ii]);
+			}
+			for(int i =0;i<b_splineImage.size();i++)
+			{
+				b_splineImage[i].header.seq = i;
+				b_splineImage[i].header.stamp = ros::Time::now();
+				b_splineImage[i].header.frame_id = "path";
+			}
+		}
+		void multipleVectors(vector<double> & berst, Pose point)
+		{
+			for(int i =0;i<berst.size();i++)
+			{
+				b_splineImage[i].pose.position.x = b_splineImage[i].pose.position.x + berst[i] *  point.x;
+				b_splineImage[i].pose.position.y = b_splineImage[i].pose.position.y + berst[i] *  point.y;
+			}
+		}
+		vector<double> Berstein(vector<double> & arr, int n, int k)
+		{
+			vector<double> returnVector;
+			double coeff = binomialCoeff(n,k);
+			for(int i =0 ; i<arr.size();i++)
+			{
+				returnVector.push_back(coeff*pow(arr[i],k)*pow(1-arr[i], n-k));
+			}
+			return returnVector;
+		}
+		double binomialCoeff(int n, int k)
+		{
+			double C[k+1];
+			memset(C, 0, sizeof(C));
+
+			C[0] = 1;
+
+			for (int i = 1; i <= n; i++)
+			{
+				for (int j = min(i, k); j > 0; j--)
+					C[j] = C[j] + C[j-1];
+			}
+			return C[k];
+
+		}
+		const std::vector<geometry_msgs::PoseStamped> & getBSpline ()
+		{
+			return b_splineImage;
 		}
 };
 #endif

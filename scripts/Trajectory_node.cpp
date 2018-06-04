@@ -22,10 +22,14 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	Image img(original);
 	img.insert_borders();
 	nav_msgs::Path path;
+	static int num =0;
+	path.header.seq = num++;
+	path.header.stamp = ros::Time::now();
+	path.header.frame_id = "path";
 	if(img.planner(start, goal))
 	{
 		std::cout << "Found Path" << std::endl;
-		std::vector<Pose> t = img.getBSpline();
+		path.poses = img.getBSpline();
 	}
 	else{
 		std::cout<<("Could NOT find path")<<std::endl;
@@ -36,8 +40,8 @@ int main(int argc, char ** argv)
 {
 	ros::init(argc, argv, "TrajectoryNode");
 	ros::NodeHandle n;
-	pub = n.advertise<nav_msgs::Path>("/PictureTopic", 1000);
-	ros::Subscriber sub = n.subscribe("/imageTopic", 1000, publishInfo);
+	pub = n.advertise<nav_msgs::Path>("path", 1000);
+	ros::Subscriber sub = n.subscribe("imageTopic", 1000, publishInfo);
 	ros::spin();
 	return 0;
 }
