@@ -14,8 +14,8 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 {
 	std::cout<<"got it"<<std::endl;
 	//disect start and goal from msg later on
-	Pose start(24, 4, 0);
-	Pose goal(1,15, 0);
+	Pose start(540, 277, M_PI); //reverse (y,x)
+	Pose goal(76, 222); //reverse (y,x)
 	Matrix original((int)msg->info.width, vector<float>((int)msg->info.height));
 	for(int i =0 , k=0; i<(int)msg->info.width; i++)
 	{
@@ -28,46 +28,36 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	img.insert_borders();
 	if(img.planner(start, goal))
 	{
-		Matrix t = img.getBSpline();
-		cv::Mat show(t.size(), t[0].size(), CV_8UC3);
-		for(int i =0; i< t.size(); i++)
+		std::vector<Pose> t = img.getBSpline();
+		cv::Mat show = cv::Mat::zeros(cv::Size((int)msg->info.height, (int)msg->info.width), CV_8UC3);
+		for(int i =0 ; i<t.size();i++)
+		{
+			Pose point = t[i];
+			show.at<cv::Vec3b>(point.x, point.y) = cv::Vec3b(0, 0, 255);
+		}
+		/*for(int i =0; i< t.size(); i++)
 		{
 			for(int j=0; j<t[0].size();j++)
 			{
-				if(t[i][j] == 150)
+				if(t[i][j] == PATH)
 				{
-					show.at<cv::Vec3b>(i,j) =cv::Vec3b(0,0,150);
+					show.at<cv::Vec3b>(i,j) =cv::Vec3b(0,0,255);//The trail
 				}
 				else
 				{
-					show.at<uchar>(i,j) = t[i][j];
+					show.at<cv::Vec3b>(i,j) = cv::Vec3b(t[i][j]*255, t[i][j]*255, t[i][j]*255) ;
 				}
 			}
-		}
+		}*/
 		cv::namedWindow("Display",CV_WINDOW_FREERATIO | CV_GUI_EXPANDED);
 		cv::imshow("Display", show);
-		std::cout << ("Could find path")<<std::endl;
+		std::cout <<"Found path"<<std::endl;
 		cv::waitKey();
 	}
 	else{
 		std::cout<<("Could NOT find path")<<std::endl;
-		cv::Mat show(original.size(), original[0].size(), CV_8UC1);
-		for(int i =0; i< original.size(); i++)
-		{
-			for(int j=0; j<original[0].size();j++)
-			{
-				{
-					show.at<uchar>(i,j) = original[i][j];
-				}
-			}
-		}
-		show.at<uchar>(goal.x,goal.y) = 150;
-		show.at<uchar>(start.x,start.y) = 150;
-		cv::namedWindow("Display",CV_WINDOW_FREERATIO | CV_GUI_EXPANDED);
-		cv::imshow("Display", show);
-		cv::waitKey();
-		exit(1);
 	}
+	exit(1);
 }
 int main(int argc, char ** argv)
 {

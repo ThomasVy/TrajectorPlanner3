@@ -6,12 +6,13 @@
 #include <vector>
 #include <cstring>
 using namespace std;
-const int PRECISION = 200;
-const int WALL=255;
+const int PRECISION = 2000;
+const int WALL=2; //B,G,R
 const int EMPTY_SPACE =1;
-const int RESOLUTION = 1;
-const float LENGTH = 3;
-const float CURVATURE = 0.25;
+const float PATH =3;
+const int RESOLUTION = 25;
+const float LENGTH = 5;
+const float CURVATURE = 0.1;
 //modify cost
 //use .pgm files
 //ros node
@@ -21,7 +22,11 @@ typedef struct Pose{
 	double x;
 	double y;
 	double theta;
-	Pose(){}
+	Pose(){
+		this->x =0;
+		this->y =0;
+		this->theta = 0;
+	}
 	Pose(double x, double y, double theta){
 		this->x =x;
 		this->y =y;
@@ -193,7 +198,7 @@ typedef struct Wall{
 
 class Image{
 	private:
-		Matrix b_splineImage;
+		std::vector<Pose> b_splineImage;
 		Matrix convertedImage;
 		Matrix arena;
 		Matrix oriImage;
@@ -226,21 +231,21 @@ class Image{
 								}
 								else if (i<0 && j ==0 && wall.direction[2])//left
 								{
-									if(wall.direction[4]||wall.direction[3]||(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//left and down
+									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//left and down
 										arena[wall.x+i][wall.y+j]= 255.0;
 									else
 										arena[wall.x+i][wall.y+j] += cost_gradient;
 								}
 								else if (i ==0 && j< 0 && wall.direction[4]) //down
 								{
-									if(wall.direction[2]||wall.direction[1]||(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//down and left corner
+									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//down and left corner
 										arena[wall.x+i][wall.y+j] = 255.0;
 									else
 										arena[wall.x+i][wall.y+j] += cost_gradient;
 								}
 								else if (i ==0 && j>0 && wall.direction[3])//up
 								{
-									if(wall.direction[2]||wall.direction[1]||(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
+									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
 										arena[wall.x+i][wall.y+j] = 255.0;
 									else
 										arena[wall.x+i][wall.y+j] += cost_gradient;
@@ -254,7 +259,7 @@ class Image{
 								}
 								else if (i>0 && j ==0 && wall.direction[1])//right
 								{
-									if(wall.direction[4]||wall.direction[3]||(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
+									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
 										arena[wall.x+i][wall.y+j] = 255.0;
 									else
 										arena[wall.x+i][wall.y+j] += cost_gradient;
@@ -284,7 +289,7 @@ class Image{
 			{
 				for (int j =0; j< convertedImage[i].size();j++)
 				{
-					if(convertedImage[i][j])
+					if(convertedImage[i][j]) //need to reverse
 						convertedImage[i][j] = EMPTY_SPACE;
 					else
 						convertedImage[i][j] = WALL;
@@ -410,7 +415,7 @@ class Image{
 		}
 		void Bezier (vector<Pose> & points, int num =PRECISION)
 		{
-			b_splineImage = oriImage;
+			//b_splineImage = oriImage;
 			int firstnum = 0;
 			int endnum = 1;
 			double result = (double)(endnum -firstnum)/(num-1);
@@ -419,11 +424,7 @@ class Image{
 			{
 				arr.push_back(firstnum + i*result);
 			}
-			vector<Pose> curve;
-			for(int i =0; i<num;i++)
-			{
-				curve.push_back(Pose(0.0, 0.0));
-			}
+			vector<Pose> curve(num);
 			for(int ii =0;ii<points.size();ii++)
 			{
 				vector<double> berst = Berstein(arr, points.size()-1, ii);
@@ -432,7 +433,8 @@ class Image{
 			for(int t=0; t<curve.size();t++)
 			{
 				Pose point = curve[t];
-				b_splineImage[(int)point.x][(int)point.y] = 150;
+				b_splineImage.push_back(point);
+				//b_splineImage[(int)point.x][(int)point.y] = PATH;
 			}
 		}
 		void multipleVectors(vector<Pose> & curve, vector<double> & berst, Pose point)
@@ -469,7 +471,7 @@ class Image{
 			return C[k];
 
 		}
-		const Matrix & getBSpline ()
+		const std::vector<Pose> & getBSpline ()
 		{
 			return b_splineImage;
 		}
