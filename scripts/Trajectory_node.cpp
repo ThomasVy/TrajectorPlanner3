@@ -15,8 +15,7 @@ bool doPlanning(Pose &start, Pose &goal, Mat & original)
 	img.insert_borders();
 	waitKey();
 	bool pathFound = img.planner(start, goal);
-	waitKey();
-	destroyAllWindows();
+	waitKey(0);
 	return pathFound;
 }
 void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
@@ -32,7 +31,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		{
 			original.at<uchar>(i,j) = msg->data.data()[k]*-255;
 			k++;
-		} 
+		}
 	}
 	doPlanning(start, goal, original);
 }

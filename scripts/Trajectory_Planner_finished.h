@@ -10,14 +10,13 @@
 
 using namespace std;
 using namespace cv;
-const Size SIZE(480, 360);
-const int PRECISION = 1000;
-const int WALL=254; //B,G,R
-const int EMPTY_SPACE =150;
-const int RESOLUTION = 10;
-const float LENGTH = 3;
-const float CURVATURE = 0.1;
-//modify cost 
+const int PRECISION = 2000;
+const int WALL=255; //B,G,R
+const int EMPTY_SPACE =1;
+const int RESOLUTION = 25;
+const float LENGTH = 10;
+const float CURVATURE = 0.25  ;
+//modify cost
 //use .pgm files
 //ros node
 
@@ -53,7 +52,7 @@ typedef struct Pose{
 			this->theta = rhs.theta;
 		}
 		return *this;
-			
+
 	}
 	static float distanceToGoal(Pose & pose, Pose & goal)
 	{
@@ -65,7 +64,7 @@ typedef struct Pose{
 	{
 		Pose *pose = NULL;
 		if(curvature == 0.0)
-		{	
+		{
 			float x1, y1;
 			x1 = x + length*cos(theta);
 			y1 = y + length*sin(theta);
@@ -88,7 +87,7 @@ typedef struct Pose{
 		}
 		return pose;
 	}
-			
+
 }Pose;
 
 
@@ -131,12 +130,12 @@ class Position{
 				this->prePosition = rhs.prePosition;
 			}
 			return *this;
-				
+
 		}
 		bool operator>(Position const& right) const{
 			return total_cost > right.total_cost;
 		}
-		vector<Position> getNeighbours (Mat & walls, Pose & goal) 
+		vector<Position> getNeighbours (Mat & walls, Pose & goal)
 		{
 			std::vector<Position> neighbours;
 			for(int i =-1; i<2;i++)
@@ -144,12 +143,13 @@ class Position{
 				float curvature = i*CURVATURE;
 				Pose* endP = pose.endPose(curvature, LENGTH);
 				Pose newPoint = *endP;
+				std::cout << newPoint.x<<" "<<newPoint.y << '\n';
 				delete endP;
 				if(newPoint.x>=0 && newPoint.x<walls.rows && newPoint.y>=0 &&newPoint.y < walls.cols)
 				{
 					Vec3b & space = walls.at<Vec3b>((int)newPoint.x, (int)newPoint.y);
 					if(space[2] != WALL)
-					{	
+					{
 						float temp = LENGTH;
 						if(i!=0)
 							temp =LENGTH*sqrt(2);
@@ -169,8 +169,8 @@ class Position{
 		{
 			return cost;
 		}
-	
-		
+
+
 };
 
 
@@ -191,7 +191,7 @@ typedef struct Wall{
 	{
 		delete[] direction;
 	}
-		
+
 }Wall;
 
 
@@ -199,12 +199,9 @@ typedef struct Wall{
 class Image{
 	private:
 		Mat originalImage;
-		Mat resizedImage;
 		Mat b_splineImage;
 		Mat convertedImage;
 		Mat arena;
-		double xratio;
-		double yratio;
 		void dilation(Wall & wall) //need to check direction now
 		{
 			if(wall.direction[0] == true) //checks if its an outside wall block
@@ -217,10 +214,10 @@ class Image{
 						{
 							if(wall.y+j >= 0 && wall.y+j <convertedImage.cols)
 							{
-								float cost_gradient = (float)70/sqrt(pow(i,2) +pow(j,2));
+								float cost_gradient = (float)150/sqrt(pow(i,2) +pow(j,2));
 								if(i<0 && j<0 && wall.direction[8]) //bottom left
 								{
-									if(arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0)
+									if(arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>255.0)
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] = 255.0;
 									else
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] += cost_gradient;
@@ -234,21 +231,21 @@ class Image{
 								}
 								else if (i<0 && j ==0 && wall.direction[2])//left
 								{
-									if(wall.direction[4]||wall.direction[3]||(arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))//left and down
+									if((arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))//left and down
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] = 255.0;
 									else
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] += cost_gradient;
 								}
 								else if (i ==0 && j< 0 && wall.direction[4]) //down
 								{
-									if(wall.direction[2]||wall.direction[1]||(arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))//down and left corner
+									if((arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))//down and left corner
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] = 255.0;
 									else
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] += cost_gradient;
 								}
 								else if (i ==0 && j>0 && wall.direction[3])//up
 								{
-									if(wall.direction[2]||wall.direction[1]||(arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))
+									if((arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] = 255.0;
 									else
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] += cost_gradient;
@@ -262,7 +259,7 @@ class Image{
 								}
 								else if (i>0 && j ==0 && wall.direction[1])//right
 								{
-									if(wall.direction[4]||wall.direction[3]||(arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))
+									if((arena.at<Vec3b>(wall.x+i, wall.y+j)[1] + cost_gradient>=255.0))
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] = 255.0;
 									else
 										arena.at<Vec3b>(wall.x+i, wall.y+j)[1] += cost_gradient;
@@ -279,25 +276,20 @@ class Image{
 					}
 				}
 			}
-						
+
 		}
-		
-		
+
+
 	public:
 		Image(const Mat & oriImage)
 		{
 			this->originalImage = oriImage;
-			xratio = 0.0;
-			yratio = 0.0;
-			resize(originalImage, resizedImage, SIZE, 0,0, INTER_NEAREST);
-			xratio = (double)resizedImage.rows/originalImage.rows;
-			yratio = (double)resizedImage.cols/originalImage.cols;
-			convertedImage = Mat::zeros(resizedImage.size(),CV_8UC3);
-			for(int i =0; i< resizedImage.rows;i++)
+			convertedImage = Mat::zeros(originalImage.size(),CV_8UC3);
+			for(int i =0; i< originalImage.rows;i++)
 			{
-				for (int j =0; j< resizedImage.cols;j++)
-				{ 
-					char colour = resizedImage.at<uchar>(i,j);
+				for (int j =0; j< originalImage.cols;j++)
+				{
+					char colour = originalImage.at<uchar>(i,j);
 					if(colour)
 						convertedImage.at<Vec3b>(i,j)[0]=EMPTY_SPACE;
 					else
@@ -315,7 +307,7 @@ class Image{
 			for(int i =0; i< convertedImage.rows;i++)
 			{
 				for (int j =0; j< convertedImage.cols;j++)
-				{ 
+				{
 					if(convertedImage.at<Vec3b>(i,j)[2]==WALL)
 					{
 						Wall wall(i, j, checkSpace(i,j));
@@ -324,7 +316,7 @@ class Image{
 				}
 			}
 			imshow("Display window", arena);
-		}			 
+		}
 		bool * checkSpace (int i, int j)
 		{
 			bool * direct = new bool[9];
@@ -379,8 +371,8 @@ class Image{
 				direct[4] = true;
 			}
 			return direct;
-			
-		}		
+
+		}
 		bool planner (Pose & start, Pose & goal)
 		{
 			swap(start);
@@ -388,7 +380,7 @@ class Image{
 			std::priority_queue<Position,vector<Position>, std::greater<Position> > openList;
 			vector<Position*> closedList;
 			list<Position> finalTrail;
-			Mat space = Mat::zeros(arena.size(), CV_8UC3); 
+			Mat space = Mat::zeros(arena.size(), CV_8UC3);
 			openList.push(Position(start, 0, NULL));
 			openList.size();
 			Pose currentPoint;
@@ -397,36 +389,36 @@ class Image{
 				{
 					return false;
 				}
-				closedList.push_back(new Position(openList.top())); 
+				closedList.push_back(new Position(openList.top()));
 				currentPoint = closedList.back()->getPoint();
 				openList.pop();
 				if(space.at<Vec3b>(currentPoint.x, currentPoint.y)[1] == 0)
 				{
 					space.at<Vec3b>(currentPoint.x, currentPoint.y)= Vec3b((int)closedList.back()->getCost(),50, 0);
-					std::vector<Position> neighbours = closedList.back()->getNeighbours(arena, goal); 
+					std::vector<Position> neighbours = closedList.back()->getNeighbours(arena, goal);
 					for(int i =0; i<neighbours.size(); i++)
 					{
 						openList.push(neighbours[i]);
 					}
 				}
 			}
-			closedList.push_back(new Position(goal , 0, closedList.back())); 
+			closedList.push_back(new Position(goal , 0, closedList.back()));
 			Position *currentPose = closedList.back();
 			while(currentPose!=NULL)
 			{
 				finalTrail.push_front(*currentPose);
 				currentPose = currentPose->prePosition;
 			}
-			Mat outimage = resizedImage.clone();
+			Mat outimage = originalImage.clone();
 			std::list<Position>::iterator it = finalTrail.begin();
-			vector<Pose> points; 
+			vector<Pose> points;
 			while(it != finalTrail.end())
 			{
 				Pose point1((*it).getPoint());
 				points.push_back(point1);
 				outimage.at<uchar>(point1.x, point1.y)= 150;
 				it++;
-			} 
+			}
 			outimage.at<uchar>(start.x, start.y) = 10;
 			outimage.at<uchar>(goal.x, goal.y)=10;
 			imshow("Hello", outimage);
@@ -437,17 +429,17 @@ class Image{
 		}
 		void swap (Pose & point)
 		{
-			double temp = point.x*yratio;
-			point.x=point.y*xratio;
+			double temp = point.x;
+			point.x=point.y;
 			point.y=temp;
-		}  
+		}
 		void Bezier (vector<Pose> & points, int num =PRECISION)
 		{
-			cvtColor(resizedImage,b_splineImage,CV_GRAY2BGR);
+			cvtColor(originalImage,b_splineImage,CV_GRAY2BGR);
 			int firstnum = 0;
 			int endnum = 1;
-			double result = (double)(endnum -firstnum)/(num-1); 
-			vector <double> arr; //t = np.linspace(0, 1, num=num) 
+			double result = (double)(endnum -firstnum)/(num-1);
+			vector <double> arr; //t = np.linspace(0, 1, num=num)
 			for(int i =0;i<num; i++)
 			{
 				arr.push_back(firstnum + i*result);
@@ -461,13 +453,13 @@ class Image{
 			{
 				vector<double> berst = Berstein(arr, points.size()-1, ii);
 				multipleVectors(curve, berst, points[ii]);
-			} 
+			}
 			for(int t=0; t<curve.size();t++)
 			{
 				Pose point = curve[t];
 				b_splineImage.at<Vec3b>((int)point.x, (int)point.y) = Vec3b(0,0, 255);
 			}
-			
+
 			 circle( b_splineImage, //start point
 					 Point(points.front().y, points.front().x),
 					 5,
@@ -490,7 +482,7 @@ class Image{
 				double y = curve[i].y + berst[i] *  point.y;
 				curve[i] = Pose(x,y);
 			}
-		}		
+		}
 		vector<double> Berstein(vector<double> & arr, int n, int k)
 		{
 			vector<double> returnVector;
@@ -505,16 +497,16 @@ class Image{
 		{
 			double C[k+1];
 			memset(C, 0, sizeof(C));
-		 
+
 			C[0] = 1;
-		 
+
 			for (int i = 1; i <= n; i++)
 			{
 				for (int j = min(i, k); j > 0; j--)
 					C[j] = C[j] + C[j-1];
 			}
 			return C[k];
-					
+
 		}
 };
 #endif
