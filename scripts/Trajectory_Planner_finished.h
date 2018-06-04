@@ -6,12 +6,12 @@
 #include <vector>
 #include <cstring>
 using namespace std;
-const int PRECISION = 1000;
+const int PRECISION = 200;
 const int WALL=255;
-const int EMPTY_SPACE =0;
-const int RESOLUTION = 10;
-const float LENGTH = 10;
-const float CURVATURE = 03;
+const int EMPTY_SPACE =1;
+const int RESOLUTION = 1;
+const float LENGTH = 3;
+const float CURVATURE = 0.25;
 //modify cost
 //use .pgm files
 //ros node

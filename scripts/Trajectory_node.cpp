@@ -14,8 +14,8 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 {
 	std::cout<<"got it"<<std::endl;
 	//disect start and goal from msg later on
-	Pose start(277, 540, M_PI);
-	Pose goal(892, 73, 0);
+	Pose start(24, 4, 0);
+	Pose goal(1,15, 0);
 	Matrix original((int)msg->info.width, vector<float>((int)msg->info.height));
 	for(int i =0 , k=0; i<(int)msg->info.width; i++)
 	{
@@ -51,6 +51,22 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	}
 	else{
 		std::cout<<("Could NOT find path")<<std::endl;
+		cv::Mat show(original.size(), original[0].size(), CV_8UC1);
+		for(int i =0; i< original.size(); i++)
+		{
+			for(int j=0; j<original[0].size();j++)
+			{
+				{
+					show.at<uchar>(i,j) = original[i][j];
+				}
+			}
+		}
+		show.at<uchar>(goal.x,goal.y) = 150;
+		show.at<uchar>(start.x,start.y) = 150;
+		cv::namedWindow("Display",CV_WINDOW_FREERATIO | CV_GUI_EXPANDED);
+		cv::imshow("Display", show);
+		cv::waitKey();
+		exit(1);
 	}
 }
 int main(int argc, char ** argv)
