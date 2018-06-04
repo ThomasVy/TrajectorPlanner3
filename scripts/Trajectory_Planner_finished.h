@@ -10,8 +10,8 @@ const int PRECISION = 1000;
 const int WALL=255;
 const int EMPTY_SPACE =0;
 const int RESOLUTION = 10;
-const float LENGTH = 3;
-const float CURVATURE = 0.9;
+const float LENGTH = 10;
+const float CURVATURE = 03;
 //modify cost
 //use .pgm files
 //ros node
