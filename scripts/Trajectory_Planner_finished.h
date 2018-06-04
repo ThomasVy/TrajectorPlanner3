@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <cstring>
+
 using namespace std;
 const int PRECISION = 2000;
 const int WALL=2; //B,G,R
@@ -21,28 +22,28 @@ typedef vector< vector<float> > Matrix;
 typedef struct Pose{
 	double x;
 	double y;
-	double theta;
+	double radian;
 	Pose(){
 		this->x =0;
 		this->y =0;
-		this->theta = 0;
+		this->radian = 0;
 	}
-	Pose(double x, double y, double theta){
+	Pose(double x, double y, double radian){
 		this->x =x;
 		this->y =y;
-		this->theta =theta;
+		this->radian =radian;
 	}
 	Pose(double x, double y)
 	{
 		this->x =x;
 		this->y =y;
-		this->theta = 0.0;
+		this->radian = 0.0;
 	}
 	Pose(const Pose & rhs)
 	{
 		this->x =rhs.x;
 		this->y =rhs.y;
-		this->theta =rhs.theta;
+		this->radian =rhs.radian;
 	}
 	Pose& operator=(const Pose & rhs)
 	{
@@ -50,7 +51,7 @@ typedef struct Pose{
 		{
 			this->x = rhs.x;
 			this->y = rhs.y;
-			this->theta = rhs.theta;
+			this->radian = rhs.radian;
 		}
 		return *this;
 
@@ -67,14 +68,14 @@ typedef struct Pose{
 		if(curvature == 0.0)
 		{
 			float x1, y1;
-			x1 = x + length*cos(theta);
-			y1 = y + length*sin(theta);
-			pose = new Pose(x1, y1, theta);
+			x1 = x + length*cos(radian);
+			y1 = y + length*sin(radian);
+			pose = new Pose(x1, y1, radian);
 		}
 		else
 		{
-			float tx = cos(theta);
-			float ty = sin(theta);
+			float tx = cos(radian);
+			float ty = sin(radian);
 			float radius = 1.0/curvature;
 			float xc = x - radius*ty;
 			float yc = y + radius *tx;
@@ -83,8 +84,8 @@ typedef struct Pose{
 			float sina = sin(angle);
 			float nx = xc +radius *(cosa * ty +sina * tx);
 			float ny = yc + radius * (sina * ty - cosa *tx);
-			float ntheta = fmod((theta + angle + M_PI), (2*M_PI)) - M_PI;
-			pose = new Pose(nx, ny, ntheta);
+			float nradian = fmod((radian + angle + M_PI), (2*M_PI)) - M_PI;
+			pose = new Pose(nx, ny, nradian);
 		}
 		return pose;
 	}
@@ -419,31 +420,25 @@ class Image{
 			int firstnum = 0;
 			int endnum = 1;
 			double result = (double)(endnum -firstnum)/(num-1);
-			vector <double> arr; //t = np.linspace(0, 1, num=num)
+			vector <double> arr (num); //t = np.linspace(0, 1, num=num)
 			for(int i =0;i<num; i++)
 			{
-				arr.push_back(firstnum + i*result);
+				arr[i] =firstnum + i*result;
 			}
-			vector<Pose> curve(num);
+			b_splineImage = vector<Pose> (num);
 			for(int ii =0;ii<points.size();ii++)
 			{
 				vector<double> berst = Berstein(arr, points.size()-1, ii);
-				multipleVectors(curve, berst, points[ii]);
-			}
-			for(int t=0; t<curve.size();t++)
-			{
-				Pose point = curve[t];
-				b_splineImage.push_back(point);
-				//b_splineImage[(int)point.x][(int)point.y] = PATH;
+				multipleVectors(berst, points[ii]);
 			}
 		}
-		void multipleVectors(vector<Pose> & curve, vector<double> & berst, Pose point)
+		void multipleVectors(vector<double> & berst, Pose point)
 		{
 			for(int i =0;i<berst.size();i++)
 			{
-				double x = curve[i].x + berst[i] *  point.x;
-				double y = curve[i].y + berst[i] *  point.y;
-				curve[i] = Pose(x,y);
+				double x = b_splineImage[i].x + berst[i] *  point.x;
+				double y = b_splineImage[i].y + berst[i] *  point.y;
+				b_splineImage[i] = Pose(x,y);
 			}
 		}
 		vector<double> Berstein(vector<double> & arr, int n, int k)
