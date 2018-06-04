@@ -199,7 +199,7 @@ typedef struct Wall{
 
 class Image{
 	private:
-		std::vector<Pose> b_splineImage;
+		std::vector<Pose> path;
 		Matrix convertedImage;
 		Matrix arena;
 		Matrix oriImage;
@@ -404,71 +404,18 @@ class Image{
 				currentPose = currentPose->prePosition;
 			}
 			std::list<Position>::iterator it = finalTrail.begin();
-			vector<Pose> points;
 			while(it != finalTrail.end())
 			{
 				Pose point1((*it).getPoint());
-				points.push_back(point1);
+				path.push_back(point1);
 				it++;
 			}
-			Bezier(points);
+
 			return true;
-		}
-		void Bezier (vector<Pose> & points, int num =PRECISION)
-		{
-			//b_splineImage = oriImage;
-			int firstnum = 0;
-			int endnum = 1;
-			double result = (double)(endnum -firstnum)/(num-1);
-			vector <double> arr (num); //t = np.linspace(0, 1, num=num)
-			for(int i =0;i<num; i++)
-			{
-				arr[i] =firstnum + i*result;
-			}
-			b_splineImage = vector<Pose> (num);
-			for(int ii =0;ii<points.size();ii++)
-			{
-				vector<double> berst = Berstein(arr, points.size()-1, ii);
-				multipleVectors(berst, points[ii]);
-			}
-		}
-		void multipleVectors(vector<double> & berst, Pose point)
-		{
-			for(int i =0;i<berst.size();i++)
-			{
-				double x = b_splineImage[i].x + berst[i] *  point.x;
-				double y = b_splineImage[i].y + berst[i] *  point.y;
-				b_splineImage[i] = Pose(x,y);
-			}
-		}
-		vector<double> Berstein(vector<double> & arr, int n, int k)
-		{
-			vector<double> returnVector;
-			double coeff = binomialCoeff(n,k);
-			for(int i =0 ; i<arr.size();i++)
-			{
-				returnVector.push_back(coeff*pow(arr[i],k)*pow(1-arr[i], n-k));
-			}
-			return returnVector;
-		}
-		double binomialCoeff(int n, int k)
-		{
-			double C[k+1];
-			memset(C, 0, sizeof(C));
-
-			C[0] = 1;
-
-			for (int i = 1; i <= n; i++)
-			{
-				for (int j = min(i, k); j > 0; j--)
-					C[j] = C[j] + C[j-1];
-			}
-			return C[k];
-
 		}
 		const std::vector<Pose> & getBSpline ()
 		{
-			return b_splineImage;
+			return path;
 		}
 };
 #endif
