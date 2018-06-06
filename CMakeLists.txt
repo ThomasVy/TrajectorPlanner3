@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   message_generation
   OpenCV
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -195,6 +196,7 @@ include_directories(
 # catkin_add_nosetests(test)
 #target_link_libraries(trajectory_planner ${catkin_LIBRARIES})
 #add_dependencies(trajectory_planner trajectory_planner_generate_messages_cpp)
+set (CMAKE_CXX_STANDARD 11)
 
 add_executable(imagePublisher scripts/Publishingnode.cpp)
 target_link_libraries(imagePublisher 

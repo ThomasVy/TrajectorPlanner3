@@ -5,20 +5,18 @@
 #include <list>
 #include <vector>
 #include <cstring>
+#include <memory>
 #include "geometry_msgs/PoseStamped.h"
 using namespace std;
-const int PRECISION = 2000;
-const int WALL=2; //B,G,R
+const int PRECISION = 200;
+const int UNKNOWN =-2;
+const int WALL=-1; //B,G,R
 const int EMPTY_SPACE =1;
-const float PATH =3;
 const int RESOLUTION = 25;
 const float LENGTH = 5;
 const float CURVATURE = 0.1;
-//modify cost
-//use .pgm files
-//ros node
 typedef vector< vector<float> > Matrix;
-
+//the path is problem
 typedef struct Pose{
 	double x;
 	double y;
@@ -62,15 +60,15 @@ typedef struct Pose{
 			float dy = goal.y - pose.y;
 			return sqrt(pow(dx,2) + pow(dy,2));
 	}
-	Pose * endPose(float curvature, float length)
+	Pose endPose(float curvature, float length)
 	{
-		Pose *pose = 0;
+		Pose pose;
 		if(curvature == 0.0)
 		{
 			float x1, y1;
 			x1 = x + length*cos(radian);
 			y1 = y + length*sin(radian);
-			pose = new Pose(x1, y1, radian);
+			pose = Pose(x1, y1, radian);
 		}
 		else
 		{
@@ -85,7 +83,7 @@ typedef struct Pose{
 			float nx = xc +radius *(cosa * ty +sina * tx);
 			float ny = yc + radius * (sina * ty - cosa *tx);
 			float nradian = fmod((radian + angle + M_PI), (2*M_PI)) - M_PI;
-			pose = new Pose(nx, ny, nradian);
+			pose = Pose(nx, ny, nradian);
 		}
 		return pose;
 	}
@@ -143,13 +141,11 @@ class Position{
 			for(int i =-1; i<2;i++)
 			{
 				float curvature = i*CURVATURE;
-				Pose* endP = pose.endPose(curvature, LENGTH);
-				Pose newPoint = *endP;
-				delete endP;
+				Pose newPoint = pose.endPose(curvature, LENGTH);
 				if(newPoint.x>=0 && newPoint.x<walls.size() && newPoint.y>=0 &&newPoint.y < walls[0].size())
 				{
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
-					if(space != WALL)
+					if(space != WALL && space !=UNKNOWN )
 					{
 						float temp = LENGTH;
 						if(i!=0)
@@ -181,18 +177,13 @@ class Position{
 typedef struct Wall{
 	int x;
 	int y;
-	bool * direction;
-	Wall(int x, int y, bool *direction)
+	vector<bool> direction;
+	Wall(int x, int y, vector<bool> direction)
 	{
 		this->x =x;
 		this->y =y;
 		this->direction =direction;
 	}
-	~Wall()
-	{
-		delete[] direction;
-	}
-
 }Wall;
 
 
@@ -290,8 +281,10 @@ class Image{
 			{
 				for (int j =0; j< convertedImage[i].size();j++)
 				{
-					if(convertedImage[i][j]) //need to reverse
+					if(convertedImage[i][j] == 0)
 						convertedImage[i][j] = EMPTY_SPACE;
+					else if(convertedImage[i][j] == -1)
+						convertedImage[i][j] = UNKNOWN;
 					else
 						convertedImage[i][j] = WALL;
 				}
@@ -312,13 +305,9 @@ class Image{
 				}
 			}
 		}
-		bool * checkSpace (int i, int j)
+	 vector<bool> checkSpace (int i, int j)
 		{
-			bool * direct = new bool[9];
-			for(int t =0;t<9;t++)
-			{
-				direct[t] =false;
-			}
+			vector<bool> direct(9, false);
 			if(i+1<convertedImage.size())
 			{
 				if(convertedImage[i+1][j] == EMPTY_SPACE)//right
@@ -371,7 +360,7 @@ class Image{
 		bool planner (Pose & start, Pose & goal)
 		{
 			std::priority_queue<Position,vector<Position>, std::greater<Position> > openList;
-			vector<Position*> closedList;
+			std::vector<std::unique_ptr<Position> > closedList;
 			list<Position> finalTrail;
 			if (arena.size() == 0 ||arena[0].size()==0)
 						return false;
@@ -383,7 +372,7 @@ class Image{
 				{
 					return false;
 				}
-				closedList.push_back(new Position(openList.top()));
+				closedList.push_back(std::unique_ptr<Position>(new Position(openList.top())));
 				currentPoint = closedList.back()->getPoint();
 				openList.pop();
 				if(space[currentPoint.x][currentPoint.y]== 0)
@@ -396,8 +385,12 @@ class Image{
 					}
 				}
 			}
-			closedList.push_back(new Position(goal , 0, closedList.back()));
-			Position *currentPose = closedList.back();
+			if(closedList.empty())
+			{
+					closedList.push_back(std::unique_ptr<Position>(new Position(start, 0, 0)));
+			}
+			closedList.push_back(std::unique_ptr<Position>(new Position(goal , 0, closedList.back().get())));
+			Position *currentPose = closedList.back().get();
 			while(currentPose!=0)
 			{
 				finalTrail.push_front(*currentPose);

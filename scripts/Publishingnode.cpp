@@ -15,7 +15,7 @@ int main(int argc, char ** argv)
 	ros::init(argc, argv, "PublishingNode");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(0.05);
-	ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("imageTopic", 1000);
+	ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("map", 1000);
 	//read image
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::MapMetaData mapData;
@@ -34,7 +34,12 @@ int main(int argc, char ** argv)
 	{
 		for(int j=0; j<file.cols;j++)
 		{
-			map.data.push_back(file.at<uchar>(i,j));
+			int t =100;
+			if(file.at<uchar>(i,j))
+			{
+				t=0;
+			}
+			map.data.push_back(t);
 		}
 	}
 	mapData.map_load_time = ros::Time::now();
@@ -43,12 +48,12 @@ int main(int argc, char ** argv)
 	mapData.height = file.cols;
 	map.info = mapData;
 	int count =1;
-	while(ros::ok()&&count<3)
+	while(ros::ok())
 	{
 		std_msgs::Header header;
 		header.seq = count++;
 		header.stamp =  ros::Time::now();
-		header.frame_id = "0";
+		header.frame_id = "map";
 		map.header = header;
 		pub.publish(map);
 		ros::spinOnce();
