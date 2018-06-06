@@ -19,7 +19,7 @@ int main(int argc, char ** argv)
 	//read image
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::MapMetaData mapData;
-	std::string imageName = "/home/thomas/catkin_ws/src/trajectory_planner/scripts/path10.png";
+	std::string imageName = "/home/thomas/catkin_ws/src/dataset_reader/src/map.pgm";
 	cv::Mat file = cv::imread(imageName, 0);
 	if(!file.data)
 	{
