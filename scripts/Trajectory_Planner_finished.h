@@ -6,15 +6,16 @@
 #include <vector>
 #include <cstring>
 #include <memory>
+#include "nav_msgs/OccupancyGrid.h"
 #include "geometry_msgs/PoseStamped.h"
 using namespace std;
-const int PRECISION = 200;
+const int PRECISION = 100;
 const int UNKNOWN =-2;
 const int WALL=-1; //B,G,R
 const int EMPTY_SPACE =1;
 const int RESOLUTION = 25;
-const float LENGTH = 5;
-const float CURVATURE = 0.1;
+const float LENGTH = 2;
+const float CURVATURE = 0.2;
 typedef vector< vector<float> > Matrix;
 //the path is problem
 typedef struct Pose{
@@ -151,7 +152,7 @@ class Position{
 						if(i!=0)
 							temp =LENGTH*sqrt(2);
 						float new_cost = cost + temp;
-						float neighbourTotalCost = Pose::distanceToGoal(newPoint, goal) + new_cost + 2*space;
+						float neighbourTotalCost = Pose::distanceToGoal(newPoint, goal) + new_cost + space;
 						neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));
 					}
 				}
@@ -206,62 +207,65 @@ class Image{
 						{
 							if(wall.y+j >= 0 && wall.y+j <convertedImage[0].size())
 							{
-								float cost_gradient = (float)70/sqrt(pow(i,2) +pow(j,2));
-								if(i<0 && j<0 && wall.direction[8]) //bottom left
+								if(arena[wall.x+i][wall.y+j]!=WALL &&arena[wall.x+i][wall.y+j]!=UNKNOWN)
 								{
-									if(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0)
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
-								}
-								else if(i<0 && j>0 && wall.direction[6]) //top left
-								{
-									if(arena[wall.x+i][wall.y+j]+ cost_gradient>=255.0)
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
-								}
-								else if (i<0 && j ==0 && wall.direction[2])//left
-								{
-									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//left and down
-										arena[wall.x+i][wall.y+j]= 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
-								}
-								else if (i ==0 && j< 0 && wall.direction[4]) //down
-								{
-									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//down and left corner
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
-								}
-								else if (i ==0 && j>0 && wall.direction[3])//up
-								{
-									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
-								}
-								else if (i>0 && j<0 && wall.direction[7])//bottom right
-								{
-									if(arena[wall.x+i][wall.y+j]+ cost_gradient>=255.0)
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j]+= cost_gradient;
-								}
-								else if (i>0 && j ==0 && wall.direction[1])//right
-								{
-									if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
-								}
-								else if (i>0 && j>0 && wall.direction[5]) //top right
-								{
-									if(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0)
-										arena[wall.x+i][wall.y+j] = 255.0;
-									else
-										arena[wall.x+i][wall.y+j] += cost_gradient;
+									float cost_gradient = (float)70/sqrt(pow(i,2) +pow(j,2));
+									if(i<0 && j<0 && wall.direction[8]) //bottom left
+									{
+										if(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0)
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
+									else if(i<0 && j>0 && wall.direction[6]) //top left
+									{
+										if(arena[wall.x+i][wall.y+j]+ cost_gradient>=255.0)
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
+									else if (i<0 && j ==0 && wall.direction[2])//left
+									{
+										if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//left and down
+											arena[wall.x+i][wall.y+j]= 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
+									else if (i ==0 && j< 0 && wall.direction[4]) //down
+									{
+										if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//down and left corner
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
+									else if (i ==0 && j>0 && wall.direction[3])//up
+									{
+										if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
+									else if (i>0 && j<0 && wall.direction[7])//bottom right
+									{
+										if(arena[wall.x+i][wall.y+j]+ cost_gradient>=255.0)
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j]+= cost_gradient;
+									}
+									else if (i>0 && j ==0 && wall.direction[1])//right
+									{
+										if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
+									else if (i>0 && j>0 && wall.direction[5]) //top right
+									{
+										if(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0)
+											arena[wall.x+i][wall.y+j] = 255.0;
+										else
+											arena[wall.x+i][wall.y+j] += cost_gradient;
+									}
 								}
 							}
 						}
@@ -367,9 +371,23 @@ class Image{
 			Matrix space(arena.size(), std::vector<float>(arena[0].size()));
 			openList.push(Position(start, 0, 0));
 			Pose currentPoint;
-			while(Pose::distanceToGoal(currentPoint, goal)>1){
+			while(Pose::distanceToGoal(currentPoint, goal)>50){
 				if(openList.empty())
 				{
+					Position *currentPose = closedList.back().get();
+					int i=1;
+					while(currentPose!=0)
+					{
+						geometry_msgs::PoseStamped pose;
+						pose.header.seq = i++;
+						pose.header.stamp = ros::Time::now();
+						pose.header.frame_id = "path";
+						pose.pose.position.x = currentPose->getPoint().x;
+						pose.pose.position.y = currentPose->getPoint().y;
+						b_splineImage.push_back(pose);
+						currentPose = currentPose->prePosition;
+					}
+					cout<<b_splineImage.size()<<endl;
 					return false;
 				}
 				closedList.push_back(std::unique_ptr<Position>(new Position(openList.top())));
@@ -464,8 +482,13 @@ class Image{
 			return C[k];
 
 		}
-		const std::vector<geometry_msgs::PoseStamped> & getBSpline ()
+		const std::vector<geometry_msgs::PoseStamped> & getBSpline (const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		{
+			for(int i =0; i<b_splineImage.size();i++)
+			{
+				b_splineImage[i].pose.position.x = (b_splineImage[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
+				b_splineImage[i].pose.position.y = (b_splineImage[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
+			}
 			return b_splineImage;
 		}
 };
