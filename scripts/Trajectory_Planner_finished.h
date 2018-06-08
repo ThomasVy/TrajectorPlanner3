@@ -14,8 +14,8 @@ const int UNKNOWN =-2;
 const int WALL=-1; //B,G,R
 const int EMPTY_SPACE =1;
 const int RESOLUTION = 25;
-const float LENGTH = 2;
-const float CURVATURE = 0.2;
+const float LENGTH = 10;
+const float CURVATURE = 0.25;
 typedef vector< vector<float> > Matrix;
 //the path is problem
 typedef struct Pose{
@@ -288,7 +288,7 @@ class Image{
 					if(convertedImage[i][j] == 0)
 						convertedImage[i][j] = EMPTY_SPACE;
 					else if(convertedImage[i][j] == -1)
-						convertedImage[i][j] = UNKNOWN;
+						convertedImage[i][j] =UNKNOWN;
 					else
 						convertedImage[i][j] = WALL;
 				}
@@ -374,20 +374,6 @@ class Image{
 			while(Pose::distanceToGoal(currentPoint, goal)>50){
 				if(openList.empty())
 				{
-					Position *currentPose = closedList.back().get();
-					int i=1;
-					while(currentPose!=0)
-					{
-						geometry_msgs::PoseStamped pose;
-						pose.header.seq = i++;
-						pose.header.stamp = ros::Time::now();
-						pose.header.frame_id = "path";
-						pose.pose.position.x = currentPose->getPoint().x;
-						pose.pose.position.y = currentPose->getPoint().y;
-						b_splineImage.push_back(pose);
-						currentPose = currentPose->prePosition;
-					}
-					cout<<b_splineImage.size()<<endl;
 					return false;
 				}
 				closedList.push_back(std::unique_ptr<Position>(new Position(openList.top())));
@@ -486,8 +472,8 @@ class Image{
 		{
 			for(int i =0; i<b_splineImage.size();i++)
 			{
-				b_splineImage[i].pose.position.x = (b_splineImage[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
-				b_splineImage[i].pose.position.y = (b_splineImage[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
+				b_splineImage[i].pose.position.x = (b_splineImage[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
+				b_splineImage[i].pose.position.y = (b_splineImage[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
 			}
 			return b_splineImage;
 		}

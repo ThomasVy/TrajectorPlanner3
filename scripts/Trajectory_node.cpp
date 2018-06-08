@@ -31,17 +31,19 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	int grid_x = (unsigned int)((transform.getOrigin().x() - msg->info.origin.position.x) / msg->info.resolution);
   int	grid_y = (unsigned int)((transform.getOrigin().y()- msg->info.origin.position.y) / msg->info.resolution);
 	//disect start and goal from msg later on
-	Pose start(grid_x, grid_y, transform.getRotation().getAngle()); //reverse (y,x)
-	Pose goal(2151,1628); //reverse (y,x)
-	Matrix original((int)msg->info.width, vector<float>((int)msg->info.height));
-	for(int i =0 , k=0; i<(int)msg->info.width; i++)
+	Pose start(grid_y,grid_x, transform.getRotation().getAngle()); //reverse (y,x)
+	Pose goal(1628, 2151); //reverse (y,x)
+	Matrix original((int)msg->info.height, vector<float>((int)msg->info.width));
+	for(int i =0 , k=0; i<(int)msg->info.height; i++)
 	{
-		for(int j=0; j<(int)msg->info.height;j++)
+		for(int j=0; j<(int)msg->info.width;j++)
 		{
 			//make start and end
 			original[i][j] = msg->data[k++];
 		}
 	}
+	std::cout << original[grid_y][grid_x] << '\n';
+	std::cout << original[1628][2151] << '\n';
 	Image img(original);
 	img.insert_borders();
 	nav_msgs::Path path;
@@ -57,7 +59,6 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	else
 	{
 		std::cout<<"Could NOT find path"<<std::endl;
-		path.poses = img.getBSpline(msg);
 	}
 	sendTransform();
 	pub.publish(path);
