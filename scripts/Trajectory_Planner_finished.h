@@ -13,9 +13,9 @@ const int PRECISION = 100;
 const int UNKNOWN =-2;
 const int WALL=-1; //B,G,R
 const int EMPTY_SPACE =1;
-const int RESOLUTION = 25;
-const float LENGTH = 10;
-const float CURVATURE = 0.25;
+const int RESOLUTION = 15;
+const float LENGTH = 2;
+const float CURVATURE = 0.15;
 typedef vector< vector<float> > Matrix;
 //the path is problem
 typedef struct Pose{
@@ -371,7 +371,7 @@ class Image{
 			Matrix space(arena.size(), std::vector<float>(arena[0].size()));
 			openList.push(Position(start, 0, 0));
 			Pose currentPoint;
-			while(Pose::distanceToGoal(currentPoint, goal)>50){
+			while(Pose::distanceToGoal(currentPoint, goal)>5){
 				if(openList.empty())
 				{
 					return false;
@@ -472,8 +472,8 @@ class Image{
 		{
 			for(int i =0; i<b_splineImage.size();i++)
 			{
-				b_splineImage[i].pose.position.x = (b_splineImage[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
-				b_splineImage[i].pose.position.y = (b_splineImage[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
+				b_splineImage[i].pose.position.x = (b_splineImage[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
+				b_splineImage[i].pose.position.y = (b_splineImage[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
 			}
 			return b_splineImage;
 		}

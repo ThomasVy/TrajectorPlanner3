@@ -22,28 +22,30 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	tf::StampedTransform transform;
   try{
     plr->lookupTransform("/map", "/base_link",
-                             ros::Time(0), transform);
+                             msg->info.map_load_time , transform);
   }
   catch (tf::TransformException ex){
     ROS_ERROR("%s",ex.what());
-    ros::Duration(1.0).sleep();
+		return;
   }
-	int grid_x = (unsigned int)((transform.getOrigin().x() - msg->info.origin.position.x) / msg->info.resolution);
-  int	grid_y = (unsigned int)((transform.getOrigin().y()- msg->info.origin.position.y) / msg->info.resolution);
+	int grid_x = (transform.getOrigin().x() - (int)msg->info.origin.position.x) / msg->info.resolution;
+  int	grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;
 	//disect start and goal from msg later on
-	Pose start(grid_y,grid_x, transform.getRotation().getAngle()); //reverse (y,x)
-	Pose goal(1628, 2151); //reverse (y,x)
+	Pose start(grid_x,grid_y, transform.getRotation().getAngle()); //reverse (y,x)
+	Pose goal(2151, 1628); //reverse (y,x)
 	Matrix original((int)msg->info.height, vector<float>((int)msg->info.width));
-	for(int i =0 , k=0; i<(int)msg->info.height; i++)
+	for(int y =0 , k=0; y<(int)msg->info.height; y++)
 	{
-		for(int j=0; j<(int)msg->info.width;j++)
+		for(int x=0; x<(int)msg->info.width ;x++)
 		{
 			//make start and end
-			original[i][j] = msg->data[k++];
+			original[x][y] = msg->data[k++];
 		}
 	}
-	std::cout << original[grid_y][grid_x] << '\n';
-	std::cout << original[1628][2151] << '\n';
+	if(original[goal.x][goal.y]!=0 ||original[start.x][start.y]!=0)
+	{
+		return;
+	}
 	Image img(original);
 	img.insert_borders();
 	nav_msgs::Path path;
