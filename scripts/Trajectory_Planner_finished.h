@@ -13,9 +13,9 @@ const int PRECISION = 100;
 const int UNKNOWN =-2;
 const int WALL=-1; //B,G,R
 const int EMPTY_SPACE =1;
-const int RESOLUTION = 15;
-const float LENGTH = 2;
-const float CURVATURE = 0.15;
+const int RESOLUTION = 10;
+const float LENGTH = 3;
+const float CURVATURE = 0.2;
 typedef vector< vector<float> > Matrix;
 //the path is problem
 typedef struct Pose{
@@ -145,19 +145,45 @@ class Position{
 				Pose newPoint = pose.endPose(curvature, LENGTH);
 				if(newPoint.x>=0 && newPoint.x<walls.size() && newPoint.y>=0 &&newPoint.y < walls[0].size())
 				{
-					float space = walls[(int)newPoint.x][(int)newPoint.y];
-					if(space != WALL && space !=UNKNOWN )
+					if(checkSpot(pose, newPoint, walls))
 					{
-						float temp = LENGTH;
-						if(i!=0)
-							temp =LENGTH*sqrt(2);
-						float new_cost = cost + temp;
-						float neighbourTotalCost = Pose::distanceToGoal(newPoint, goal) + new_cost + space;
-						neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));
+							float space = walls[(int)newPoint.x][(int)newPoint.y];
+							float temp = LENGTH;
+							if(i!=0)
+								temp =LENGTH*sqrt(2);
+							float new_cost = cost + temp;
+							float neighbourTotalCost = 1.1*Pose::distanceToGoal(newPoint, goal) + new_cost + 2*space;
+							neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));
 					}
 				}
 			}
 			return neighbours;
+		}
+		bool checkSpot (Pose & current, Pose & next, Matrix & walls)
+		{
+			int diffx = current.x - next.x;
+			int diffy = current.y - next.y;
+			int incrementx = 1, incrementy =1;
+			if(diffx<0)
+				incrementx =-1;
+			if(diffy<0)
+				incrementy =-1;
+			int y =0;
+			for(int x =0;abs(x)<=abs(diffx); x+=incrementx)
+			{
+				for (y=0; abs(y)<=abs(diffy); y+=incrementy)
+				{
+					if(walls[current.x+x][current.y+y]==UNKNOWN||walls[current.x+x][current.y+y] == WALL)
+						return false;
+				}
+			}
+			while(abs(y)<=abs(diffy))
+			{
+				if(walls[current.x][current.y+y]==UNKNOWN||walls[current.x][current.y+y] == WALL)
+					return false;
+				y+=incrementy;
+			}
+			return true;
 		}
 		Pose & getPoint()
 		{

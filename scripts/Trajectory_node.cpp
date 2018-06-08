@@ -1,7 +1,5 @@
 #include "Trajectory_Planner_finished.h"
 #include "ros/ros.h"
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include "nav_msgs/Path.h"
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
@@ -18,14 +16,12 @@ void sendTransform()
 }
 void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1 is occupied, 0.5 for unknown
 {
-	std::cout<<"got it"<<std::endl;
 	tf::StampedTransform transform;
   try{
     plr->lookupTransform("/map", "/base_link",
                              msg->info.map_load_time , transform);
   }
   catch (tf::TransformException ex){
-    ROS_ERROR("%s",ex.what());
 		return;
   }
 	int grid_x = (transform.getOrigin().x() - (int)msg->info.origin.position.x) / msg->info.resolution;
@@ -55,16 +51,15 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg) //0 is free and 1
 	path.header.frame_id = "path";
 	if(img.planner(start, goal))
 	{
-		std::cout << "Found Path" << std::endl;
+		ROS_INFO("Found Path");
 		path.poses = img.getBSpline(msg);
 	}
 	else
 	{
-		std::cout<<"Could NOT find path"<<std::endl;
+		ROS_ERROR("Could NOT find path");
 	}
 	sendTransform();
 	pub.publish(path);
-	ros::spinOnce();
 }
 int main(int argc, char ** argv)
 {
