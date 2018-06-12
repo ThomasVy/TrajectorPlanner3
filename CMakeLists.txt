@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   message_generation
-  OpenCV
   tf
 )
 
@@ -107,10 +106,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES trajectory_planner
+  INCLUDE_DIRS include
+  LIBRARIES trajectory_planner
   CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs message_runtime
-#  DEPENDS system_lib
+  DEPENDS system_lib
 )
 
 ###########
@@ -122,7 +121,7 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
+  include
 )
 
 ## Declare a C++ library
@@ -198,16 +197,6 @@ include_directories(
 #add_dependencies(trajectory_planner trajectory_planner_generate_messages_cpp)
 set (CMAKE_CXX_STANDARD 11)
 
-add_executable(imagePublisher scripts/Publishingnode.cpp)
-target_link_libraries(imagePublisher 
-			${catkin_LIBRARIES}
-			${OpenCV_LIBRARIES}
-			)
-add_dependencies(imagePublisher trajectory_planner_generate_messages_cpp)
-
-add_executable(traject scripts/Trajectory_node.cpp)
-target_link_libraries(traject
-			${catkin_LIBRARIES}
-			${OpenCV_LIBRARIES}
-			)
+add_executable(traject src/Trajectory_node.cpp)
+target_link_libraries(traject ${catkin_LIBRARIES})
 add_dependencies(traject trajectory_planner_generate_messages_cpp)
