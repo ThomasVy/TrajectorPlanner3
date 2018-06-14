@@ -1,6 +1,9 @@
 #ifndef TRAJECTCONST
 #define TRAJECTCONST
 #include <vector>
+#include <queue>
+#include <list>
+#include <memory>
 #include "geometry_msgs/PoseStamped.h"
 /**
   The constants for the trajectory planner
@@ -57,12 +60,13 @@ typedef struct Pose{
 }Pose;
 //The position class for points on the map
 class Position{
+	friend class Image;
 	private:
 		float cost; //The cost of that position
 		float total_cost; //The total cost of moving to that position
 		Pose pose; //The pose of that spot
-	public:
 		Position * prePosition; //The previous spot of this position
+	public:
 		Position(Pose & pose, float total_cost, float cost, Position * prePosition);//constructor
 		Position(Pose & pose, float cost, Position * prePosition);//constructor
 		Position(const Position & rhs);//copy constructor
@@ -71,7 +75,6 @@ class Position{
 		bool operator>(Position const& right) const {return total_cost > right.total_cost;}// comparing for the priority queue
 		listOfPositions getNeighbours (matrix & walls, Pose & goal);// gets the neighbours of this position
 		bool checkNeighbour (Pose & current, Pose & next, matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
-		Pose & getPoint(){return pose;} //returns the pose of the position
 };
 
 //Hold the image grids and do calculations for them

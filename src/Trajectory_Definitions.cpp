@@ -1,10 +1,5 @@
-#ifndef TRAJECTORY_PLANNER
-#define TRAJECTORY_PLANNER
-#include <queue>
 #include <math.h>
-#include <list>
 #include <cstring>
-#include <memory>
 #include "trajectory_planner/Constants.hpp"
 /*
 	all the definitions for classes in Trajectory_Constants
@@ -341,7 +336,7 @@ bool Image::planner (Pose & start, Pose & goal)
 			return false;
 		}
 		closedList.push_back(std::unique_ptr<Position>(new Position(openList.top())));//grabs the lowest cost in the priority queue
-		currentPoint = closedList.back()->getPoint();//gets the point from priority queue
+		currentPoint = closedList.back()->pose;//gets the point from priority queue
 		openList.pop();// gets rid of the lowest cost from the priority queue
 		if(space[currentPoint.x][currentPoint.y]== 0)//checks if the space is not been visited yet
 		{
@@ -362,7 +357,7 @@ bool Image::planner (Pose & start, Pose & goal)
 	poseVector points;
 	while(currentPose!=0) //gets the path that made it to the goal first
 	{
-		points.insert(points.begin(), currentPose->getPoint());
+		points.insert(points.begin(), currentPose->pose);
 		currentPose = currentPose->prePosition;
 	}
 	path = pathMessage(points.size());
@@ -442,4 +437,3 @@ const pathMessage & Image::getPath ()
 {
 	return path;
 }
-#endif

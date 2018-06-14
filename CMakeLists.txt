@@ -125,9 +125,9 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(trajectory_planner
-#   src/${PROJECT_NAME}/trajectory_planner.cpp
-# )
+#add_library(trajectory_planner
+ # include/trajectory_planner/Trajectory_Definitions.cpp
+#)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -197,6 +197,6 @@ include_directories(
 #add_dependencies(trajectory_planner trajectory_planner_generate_messages_cpp)
 set (CMAKE_CXX_STANDARD 11)
 
-add_executable(traject src/Trajectory_node.cpp)
+add_executable(traject src/Trajectory_node.cpp src/Trajectory_Definitions.cpp)
 target_link_libraries(traject ${catkin_LIBRARIES})
 add_dependencies(traject trajectory_planner_generate_messages_cpp)

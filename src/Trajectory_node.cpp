@@ -1,4 +1,4 @@
-#include "trajectory_planner/Trajectory_Definitions.hpp"
+#include "trajectory_planner/Constants.hpp"
 #include "ros/ros.h"
 #include "nav_msgs/Path.h"
 #include <tf/transform_broadcaster.h>
@@ -33,7 +33,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		return; //returns if there is an error in the transformation
   }
 	int grid_x = (transform.getOrigin().x() - (int)msg->info.origin.position.x) / msg->info.resolution; //changes the robot real position to the grid
-  int	grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
+  	int grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
 
 
 	Pose start(grid_x,grid_y, tf::getYaw(transform.getRotation())); //the start position (the robot's current position)
