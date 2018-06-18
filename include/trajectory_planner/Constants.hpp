@@ -73,19 +73,21 @@ class Position{
 		Position():cost(0),total_cost(0){} //default constructor
 		Position& operator=(const Position & rhs);//assignment operator
 		bool operator>(Position const& right) const {return total_cost > right.total_cost;}// comparing for the priority queue
-		listOfPositions getNeighbours (matrix & walls, Pose & goal);// gets the neighbours of this position
-		bool checkNeighbour (Pose & current, Pose & next, matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
+		listOfPositions getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose &last);// gets the neighbours of this position
+		bool checkNeighbour (const Pose & current, const Pose & next,const matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
 };
 
 //Hold the image grids and do calculations for them
 class Image{
 	private:
+		Pose first; //The beginning map edges
+		Pose last; //The end map edges
 		pathMessage path;// the message to be broadcasted
 		matrix convertedImage;//the Wall, Unknown, and Empty space located
 		matrix arena;// the cost grid
 		void dilation(Wall & wall);//turns all the empty space cells next to a wall into a certain cost
 	public:
-		Image(const matrix & oriImage);//constructor. Turns the original image into the converted Image
+		Image(const matrix & oriImage, const Pose & first, const Pose & last);//constructor. Turns the original image into the converted Image
 		void insert_borders ();//creates the arena by locating all wall cells
 		vector<bool> checkSpace (int i, int j);//checks spaces around a wall to see which direction is open space
 		bool planner (Pose & start, Pose & goal);//plans the path for the map

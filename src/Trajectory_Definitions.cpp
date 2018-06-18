@@ -7,7 +7,7 @@
 	Date: June 12 2018
 	email:thomas.vy@ucalgary.ca
 	*/
-float distanceToGoal(Pose & pose, Pose & goal)
+float distanceToGoal(const Pose & pose, const Pose & goal)
 {
 			float dx = goal.x - pose.x;
 			float dy = goal.y - pose.y;
@@ -93,14 +93,14 @@ Position& Position::operator=(const Position & rhs)
 	}
 	return *this;
 }
-listOfPositions Position::getNeighbours (matrix & walls, Pose & goal)
+listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose & last)
 {
 	listOfPositions neighbours;
 	for(int i =-1; i<2;i++)//checks left, straight, and right movement.
 	{
 		float curvature = i*CURVATURE;
 		Pose newPoint = pose.endPose(curvature, LENGTH); //gets new potenial position
-		if(newPoint.x>=0 && newPoint.x<walls.size() && newPoint.y>=0 &&newPoint.y < walls[0].size())//checks if within range
+		if(newPoint.x>=first.x && newPoint.x<=last.x && newPoint.y>=first.y &&newPoint.y <=last.y)//checks if within range
 		{
 			if(checkNeighbour(pose, newPoint, walls))//checks if the new potenial spot is valid
 			{
@@ -116,7 +116,7 @@ listOfPositions Position::getNeighbours (matrix & walls, Pose & goal)
 	}
 	return neighbours;
 }
-bool Position::checkNeighbour (Pose & current, Pose & next, matrix & walls)
+bool Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
 {
 	int diffx = current.x - next.x;
 	int diffy = current.y - next.y;
@@ -162,11 +162,11 @@ void Image::dilation(Wall & wall)
 	{
 		for(int i =-RESOLUTION;i<=RESOLUTION;i++)
 		{
-			if(wall.x+i >=0 && wall.x+i<convertedImage.size())//checks if valid x-range-
+			if(wall.x+i >=first.x && wall.x+i<=last.x)//checks if valid x-range-
 			{
 				for(int j =-RESOLUTION; j<=RESOLUTION;j++)
 				{
-					if(wall.y+j >= 0 && wall.y+j <convertedImage[0].size())//checks if valid y-range
+					if(wall.y+j >= first.y && wall.y+j <= last.y)//checks if valid y-range
 					{
 						if(arena[wall.x+i][wall.y+j]!=WALL &&arena[wall.x+i][wall.y+j]!=UNKNOWN)//makes sure the current position is not a wall or unknown
 						{
@@ -237,12 +237,14 @@ void Image::dilation(Wall & wall)
 }
 
 
-Image::Image(const matrix & oriImage)
+Image::Image(const matrix & oriImage, const Pose & first, const Pose & last)
 {
 	convertedImage = oriImage;
-	for(int i =0; i< convertedImage.size();i++)
+	this->first = first;
+	this->last= last;
+	for(int i =first.x; i<=last.x;i++)
 	{
-		for (int j =0; j< convertedImage[i].size();j++)
+		for (int j =first.y; j<=last.y;j++)
 		{
 			if(convertedImage[i][j] == 0)
 				convertedImage[i][j] = EMPTY_SPACE;
@@ -256,9 +258,9 @@ Image::Image(const matrix & oriImage)
 void Image::insert_borders ()
 {
 	arena = convertedImage;
-	for(int i =0; i< convertedImage.size();i++)
+	for(int i =first.x; i<=last.x;i++)
 	{
-		for (int j =0; j< convertedImage[i].size();j++)
+		for (int j =first.y; j<=last.y;j++)
 		{
 			if(convertedImage[i][j]==WALL)
 			{
@@ -271,37 +273,37 @@ void Image::insert_borders ()
 vector<bool> Image::checkSpace (int i, int j)
 {
 	vector<bool> direct(9, false);
-	if(i+1<convertedImage.size())
+	if(i+1<=last.x)
 	{
 		if(convertedImage[i+1][j] == EMPTY_SPACE)//right space
 		{
 			direct[0] =true;
 			direct[1] =true;
 		}
-		if(j+1<convertedImage[i].size() && convertedImage[i+1][j+1]== EMPTY_SPACE)//top right space
+		if(j+1<=last.y && convertedImage[i+1][j+1]== EMPTY_SPACE)//top right space
 		{
 			direct[0] =true;
 			direct[5] =true;
 		}
-			if(j-1 >=0 && convertedImage[i+1][j-1] == EMPTY_SPACE)//bottom right space
+			if(j-1 >=first.y&& convertedImage[i+1][j-1] == EMPTY_SPACE)//bottom right space
 		{
 			direct[0] =true;
 			direct[7] =true;
 		}
 	}
-	if(i-1>=0)
+	if(i-1>=first.x)
 	{
 		if(convertedImage[i-1][j] == EMPTY_SPACE)//left space
 		{
 			direct[0] =true;
 			direct[2] =true;
 		}
-		if(j+1<convertedImage[i].size() && convertedImage[i-1][j+1]== EMPTY_SPACE)//top left space
+		if(j+1<=last.y && convertedImage[i-1][j+1]== EMPTY_SPACE)//top left space
 		{
 			direct[0] =true;
 			direct[6] =true;
 		}
-		if(j-1 >=0 && convertedImage[i-1][j-1] == EMPTY_SPACE)//bottom left space
+		if(j-1 >=first.y && convertedImage[i-1][j-1] == EMPTY_SPACE)//bottom left space
 		{
 			direct[0] =true;
 			direct[8] =true;
@@ -341,7 +343,7 @@ bool Image::planner (Pose & start, Pose & goal)
 		if(space[currentPoint.x][currentPoint.y]== 0)//checks if the space is not been visited yet
 		{
 			space[currentPoint.x][currentPoint.y]= 1;
-			std::vector<Position> neighbours = closedList.back()->getNeighbours(arena, goal); // gets the neighbours to the current point
+			std::vector<Position> neighbours = closedList.back()->getNeighbours(arena, goal, first , last); // gets the neighbours to the current point
 			for(int i =0; i<neighbours.size(); i++)
 			{
 				openList.push(neighbours[i]); //push all the neighbours to the currnt point to the priority queue

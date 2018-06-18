@@ -4,6 +4,8 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include "nav_msgs/OccupancyGrid.h"
+#include <iostream>
+using namespace std;
 /*
 	Uses ros to subscibe to the /map and publishes a path to /path
 	Author:Thomas Vy
@@ -33,8 +35,9 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		return; //returns if there is an error in the transformation
   }
 	int grid_x = (transform.getOrigin().x() - (int)msg->info.origin.position.x) / msg->info.resolution; //changes the robot real position to the grid
-  	int grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
+  int grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
 
+	int firstx =(int)msg->info.width, firsty =(int)msg->info.height , lastx =-1,lasty =-1; //reduces the size of the map.
 
 	Pose start(grid_x,grid_y, tf::getYaw(transform.getRotation())); //the start position (the robot's current position)
 	Pose goal(2151, 1628); //the goal position
@@ -43,15 +46,29 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	{
 		for(int x=0; x<(int)msg->info.width ;x++)
 		{
+			int value =  msg->data[k++];
 			//make start and end
-			original[x][y] = msg->data[k++];
+			original[x][y] = value;
+			if(value!=-1) //checks for empty or wall space in the map
+			{
+				if(x<firstx)
+					firstx = x;
+				if(y<firsty)
+					firsty = y;
+				if(x>lastx)
+					lastx = x;
+				if(y>lasty)
+					lasty =y;
+			}
 		}
 	}
-	if(original[goal.x][goal.y]!=0 ||original[start.x][start.y]!=0) // if the goal or start not in free space end the path finding
-	{
+	if(lastx<firstx || lasty<firsty) //If there are no bounds.
 		return;
-	}
-	Image img(original); //creates a converted image bsaed off original map
+	if(original[goal.x][goal.y]!=0 ||original[start.x][start.y]!=0) // if the goal or start not in free space end the path finding
+		return;
+	Pose first(firstx, firsty);
+	Pose last(lastx, lasty);
+	Image img(original, first, last); //creates a converted image bsaed off original map
 	img.insert_borders(); //creates cost map
 	nav_msgs::Path path;
 	static int num =0;
