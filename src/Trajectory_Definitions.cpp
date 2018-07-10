@@ -126,9 +126,11 @@ bool Position::checkNeighbour (const Pose & current, const Pose & next, const ma
 	if(diffy<0)
 		incrementy =-1;
 	int y,x;
-	for(x=0;abs(x)<=abs(diffx)&&diffy>1; x+=incrementx)//checks the area around a diagonal movement
+	for(x=0;abs(x)<=abs(diffx)+1 &&diffy>1; x+=incrementx)//checks the area around a diagonal movement
 	{
-		for (y=0; abs(y)<=abs(diffy); y+=incrementy)
+		if(diffx<=1)
+			break;
+		for (y=0; abs(y)<=abs(diffy)+1; y+=incrementy)
 		{
 			if(walls[current.x+x][current.y+y]==UNKNOWN||walls[current.x+x][current.y+y] == WALL)
 				return false;
@@ -136,7 +138,7 @@ bool Position::checkNeighbour (const Pose & current, const Pose & next, const ma
 	}
 	while(abs(y)<=abs(diffy))//checks the area around vertical movement
 	{
-		for(int i=-LENGTH/2;i<LENGTH/2;i++) //gives it width
+		for(int i=-HITBOX;i<=HITBOX;i++) //gives it width
 		{
 			if(walls[current.x+i][current.y+y]==UNKNOWN||walls[current.x+i][current.y+y] == WALL)
 				return false;
@@ -145,7 +147,7 @@ bool Position::checkNeighbour (const Pose & current, const Pose & next, const ma
 	}
 	while(abs(x)<=abs(diffx))//checks the area around horizatontal movement
 	{
-		for(int i=-LENGTH/2;i<LENGTH/2;i++)//gives it width
+		for(int i=-HITBOX;i<=HITBOX;i++)//gives it width
 		{
 			if(walls[current.x+x][current.y+i]==UNKNOWN||walls[current.x+x][current.y+i] == WALL)
 				return false;
