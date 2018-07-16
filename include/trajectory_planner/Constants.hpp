@@ -26,7 +26,7 @@ const int EMPTY_SPACE =1; //The empty space value
 const int RESOLUTION = 10; //The distance from wall to calculate(for cost)
 const float LENGTH = 2; //The distance between points(higher number = fast computation but inaccurate path)
 const float CURVATURE = 0.2; //The curvature the robot takes
-const float HITBOX = 0.5; // the hit box of the robot
+const float HITBOX = 4; // the hit box of the robot
 //The typedefs
 typedef vector< vector<double> > matrix; //Holds the map cells
 typedef vector<geometry_msgs::PoseStamped> pathMessage;//The path message

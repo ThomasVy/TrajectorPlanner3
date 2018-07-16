@@ -126,11 +126,11 @@ bool Position::checkNeighbour (const Pose & current, const Pose & next, const ma
 	if(diffy<0)
 		incrementy =-1;
 	int y,x;
-	for(x=0;abs(x)<=abs(diffx)+1 &&diffy>1; x+=incrementx)//checks the area around a diagonal movement
+	for(x=0;abs(x)<=abs(diffx)+HITBOX/2 &&diffy>1; x+=incrementx)//checks the area around a diagonal movement
 	{
 		if(diffx<=1)
 			break;
-		for (y=0; abs(y)<=abs(diffy)+1; y+=incrementy)
+		for (y=0; abs(y)<=abs(diffy)+HITBOX/2; y+=incrementy)
 		{
 			if(walls[current.x+x][current.y+y]==UNKNOWN||walls[current.x+x][current.y+y] == WALL)
 				return false;

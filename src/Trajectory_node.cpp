@@ -20,8 +20,8 @@ void sendTransform()
 	static tf::TransformBroadcaster broadcaster;
 	broadcaster.sendTransform(
 			tf::StampedTransform(
-			tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, 0.0)),   // map and path do need need to be tranformed.
-				ros::Time::now(), "map", "path" ));
+			tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, 0.0)),   // map and path need to be tranformed.
+				ros::Time::now(), "/map", "/path" ));
 }
 //publishes the path to /path
 void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
@@ -35,12 +35,11 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		return; //returns if there is an error in the transformation
   }
 	int grid_x = (transform.getOrigin().x() - (int)msg->info.origin.position.x) / msg->info.resolution; //changes the robot real position to the grid
-  int grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
-
+  	int grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
 	int firstx =(int)msg->info.width, firsty =(int)msg->info.height , lastx =-1,lasty =-1; //reduces the size of the map.
-
+	ROS_INFO("current pose: %d, %d", grid_x, grid_y);
 	Pose start(grid_x,grid_y, tf::getYaw(transform.getRotation())); //the start position (the robot's current position)
-	Pose goal(2151, 1628); //the goal position
+	Pose goal(2001, 1999); //the goal position
 	matrix original((int)msg->info.height, vector<double>((int)msg->info.width)); //the original map in a 2d vector
 	for(int y =0 , k=0; y<(int)msg->info.height; y++)
 	{
@@ -64,7 +63,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	}
 	if(lastx<firstx || lasty<firsty) //If there are no bounds.
 		return;
-	if(original[goal.x][goal.y]!=0 ||original[start.x][start.y]!=0) // if the goal or start not in free space end the path finding
+	if(original[goal.x][goal.y]!=0) // if the goal or start not in free space end the path finding
 		return;
 	Pose first(firstx, firsty);
 	Pose last(lastx, lasty);
@@ -92,6 +91,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	}
 	sendTransform();
 	pub.publish(path);
+	exit(0);
 }
 
 int main(int argc, char ** argv)
