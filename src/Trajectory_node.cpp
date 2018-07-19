@@ -21,7 +21,7 @@ void sendTransform()
 	broadcaster.sendTransform(
 			tf::StampedTransform(
 			tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, 0.0)),   // map and path need to be tranformed.
-				ros::Time::now(), "/map", "/path" ));
+				ros::Time::now(), "map", "path" ));
 }
 //publishes the path to /path
 void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
@@ -64,7 +64,10 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	if(lastx<firstx || lasty<firsty) //If there are no bounds.
 		return;
 	if(original[goal.x][goal.y]!=0) // if the goal or start not in free space end the path finding
+	{
 		return;
+		ROS_INFO("unknown");
+	}
 	Pose first(firstx, firsty);
 	Pose last(lastx, lasty);
 	Image img(original, first, last); //creates a converted image bsaed off original map
@@ -83,15 +86,13 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 			path.poses[i].pose.position.x = (path.poses[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
 			path.poses[i].pose.position.y = (path.poses[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
 		}
+		pub.publish(path);
+		sendTransform();
 	}
 	else
 	{
 		ROS_ERROR("Could NOT find path");
-		return;
 	}
-	sendTransform();
-	pub.publish(path);
-	exit(0);
 }
 
 int main(int argc, char ** argv)
