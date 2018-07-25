@@ -96,7 +96,7 @@ Position& Position::operator=(const Position & rhs)
 listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose & last)
 {
 	listOfPositions neighbours;
-	for(int i =-1; i<2;i++)//checks left, straight, and right movement.
+	for(float i =-1; i<=1;i+=0.5)//checks left, straight, and right movement.
 	{
 		float curvature = i*CURVATURE;
 		Pose newPoint = pose.endPose(curvature, LENGTH); //gets new potenial position
@@ -105,9 +105,7 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 			if(checkNeighbour(pose, newPoint, walls))//checks if the new potenial spot is valid
 			{
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
-					float temp = LENGTH;
-					if(i!=0)
-						temp =LENGTH*sqrt(2);
+					float temp = LENGTH + abs(i)*3*LENGTH;
 					float new_cost = cost + temp;
 					float neighbourTotalCost = distanceToGoal(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
 					neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));// pushes it in the list of potential positions to move
@@ -403,7 +401,7 @@ bool Image::planner (Pose & start, Pose & goal)
 		}
 		closedList.push_back(std::unique_ptr<Position>(new Position(openList.top())));//grabs the lowest cost in the priority queue
 		currentPoint = closedList.back()->pose;//gets the point from priority queue
-		openList.pop();// gets rid of the lowest cost from the priority queue
+		openList.pop();// gets rid of the low9est cost from the priority queue
 		if(space[currentPoint.x][currentPoint.y]== 0)//checks if the space is not been visited yet
 		{
 			space[currentPoint.x][currentPoint.y]= 1;

@@ -39,7 +39,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	int firstx =(int)msg->info.width, firsty =(int)msg->info.height , lastx =-1,lasty =-1; //reduces the size of the map.
 	ROS_INFO("current pose: %d, %d", grid_x, grid_y);
 	Pose start(grid_x,grid_y, tf::getYaw(transform.getRotation())); //the start position (the robot's current position)
-	Pose goal(2001, 1999); //the goal position
+	Pose goal(2151, 1628); //the goal position
 	matrix original((int)msg->info.height, vector<double>((int)msg->info.width)); //the original map in a 2d vector
 	for(int y =0 , k=0; y<(int)msg->info.height; y++)
 	{
@@ -61,7 +61,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 			}
 		}
 	}
-	if(lastx<firstx || lasty<firsty) //If there are no bounds.
+	if(lastx<=firstx || lasty<=firsty) //If there are no bounds.
 		return;
 	if(original[goal.x][goal.y]!=0) // if the goal or start not in free space end the path finding
 	{
@@ -99,8 +99,8 @@ int main(int argc, char ** argv)
 {
 	ros::init(argc, argv, "TrajectoryNode"); //init the node
 	ros::NodeHandle n;
-	pub = n.advertise<nav_msgs::Path>("path", 1000);// publishes to path
-	ros::Subscriber sub = n.subscribe("map", 1000, publishInfo);// subscribes to map
+	pub = n.advertise<nav_msgs::Path>("path", 10);// publishes to path
+	ros::Subscriber sub = n.subscribe("map", 1, publishInfo);// subscribes to map
 	tf::TransformListener listener; //tf listener
 	plr = &listener;
 	ros::spin();
