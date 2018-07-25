@@ -1,7 +1,6 @@
 #include <math.h>
 #include <cstring>
 #include "trajectory_planner/Constants.hpp"
-#include <iostream>
 /*
 	all the definitions for classes in Trajectory_Constants
 	Author:Thomas Vy
@@ -60,6 +59,7 @@ Pose Pose::endPose(float curvature, float length)
 	}
 	return pose;
 }
+
 //Position class Definitions
 Position::Position(Pose & pose, float total_cost, float cost, Position * prePosition)
 {
@@ -96,7 +96,7 @@ Position& Position::operator=(const Position & rhs)
 listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose & last)
 {
 	listOfPositions neighbours;
-	for(float i =-1; i<=1;i+=0.5)//checks left, straight, and right movement.
+	for(int i =-1; i<2;i++)//checks left, straight, and right movement.
 	{
 		float curvature = i*CURVATURE;
 		Pose newPoint = pose.endPose(curvature, LENGTH); //gets new potenial position
@@ -105,7 +105,9 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 			if(checkNeighbour(pose, newPoint, walls))//checks if the new potenial spot is valid
 			{
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
-					float temp = LENGTH + abs(i)*3*LENGTH;
+					float temp = LENGTH;
+					if(i!=0)
+						temp =LENGTH*sqrt(2);
 					float new_cost = cost + temp;
 					float neighbourTotalCost = distanceToGoal(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
 					neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));// pushes it in the list of potential positions to move
@@ -116,188 +118,124 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 }
 bool Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
 {
-	double diffx = next.x - current.x;
-	double diffy = next.y - current.y;
-	double angle = atan2 (diffy, diffx);
-	double incrementx = cos(angle);
-	double incrementy = sin(angle);
-	if(fabs(incrementx)<0.05)//only y direction
+	int diffx = current.x - next.x;
+	int diffy = current.y - next.y;
+	int incrementx = 1, incrementy =1;
+	if(diffx<0)
+		incrementx =-1;
+	if(diffy<0)
+		incrementy =-1;
+	int y,x;
+	for(x=0;abs(x)<=abs(diffx)&&diffy>1; x+=incrementx)//checks the area around a diagonal movement
 	{
-		for(double j = incrementy; fabs(j)<=fabs(diffy); j+= incrementy)
+		for (y=0; abs(y)<=abs(diffy); y+=incrementy)
 		{
-			if(walls[current.x][current.y+j]==WILLCOLIDE||walls[current.x][current.y+j]==WALL||walls[current.x][current.y+j]==UNKNOWN)
+			if(walls[current.x+x][current.y+y]==UNKNOWN||walls[current.x+x][current.y+y] == WALL)
 				return false;
 		}
-			return true;
 	}
-	else if (fabs(incrementy)<0.05)//only x direction
+	while(abs(y)<=abs(diffy))//checks the area around vertical movement
 	{
-		for(double i =incrementx; fabs(i)<=fabs(diffx); i+= incrementx)
+		for(int i=-LENGTH/2;i<LENGTH/2;i++) //gives it width
 		{
-			if(walls[current.x+i][current.y]==WILLCOLIDE||walls[current.x+i][current.y]==WALL||walls[current.x+i][current.y]==UNKNOWN)
+			if(walls[current.x+i][current.y+y]==UNKNOWN||walls[current.x+i][current.y+y] == WALL)
 				return false;
 		}
-			return true;
+		y+=incrementy;
 	}
-	else
+	while(abs(x)<=abs(diffx))//checks the area around horizatontal movement
 	{
-		for(double x = incrementx, y = incrementy; fabs(x)<=fabs(diffx); x+=incrementx, y+= incrementy)
+		for(int i=-LENGTH/2;i<LENGTH/2;i++)//gives it width
 		{
-			if(walls[current.x+x][current.y+y]==WILLCOLIDE||walls[current.x+x][current.y+y]==WALL||walls[current.x+x][current.y+y]==UNKNOWN)
+			if(walls[current.x+x][current.y+i]==UNKNOWN||walls[current.x+x][current.y+i] == WALL)
 				return false;
 		}
-		return true;
+		x+=incrementx;
 	}
+	return true;
 }
-
-
 
 //Image class definitions
 void Image::dilation(Wall & wall)
 {
-	if(wall.direction[0] == true)
+	if(wall.direction[0] == true) //checks if its an outside wall block
 	{
-		if(wall.direction[1])//right
+		for(int i =-RESOLUTION;i<=RESOLUTION;i++)
 		{
-			float i;
-			for(i =1; i<HITBOX && wall.x+i <= last.x;i++)
+			if(wall.x+i >=first.x && wall.x+i<=last.x)//checks if valid x-range-
 			{
-				if (arena[wall.x+i][wall.y] != WALL && arena[wall.x+i][wall.y] != UNKNOWN)
-					arena[wall.x+i][wall.y] = WILLCOLIDE;
-			}
-			while(i<RESOLUTION+HITBOX && wall.x+i <= last.x)
-			{
-				float cost_gradient = fabs((float)50/i);
-				if (arena[wall.x+i][wall.y] == WALL || arena[wall.x+i][wall.y] == UNKNOWN || arena[wall.x+i][wall.y] == WILLCOLIDE)
-					break;
-				arena[wall.x+i][wall.y] += cost_gradient;
-				i++;
-			}
-
-		}
-		if(wall.direction[2])//left
-		{
-			float i;
-			for(i =-1; i>-HITBOX && wall.x+i >= first.x;i--)
-			{
-				if (arena[wall.x+i][wall.y] != WALL && arena[wall.x+i][wall.y] != UNKNOWN)
-					arena[wall.x+i][wall.y] = WILLCOLIDE;
-			}
-			while(i>-(RESOLUTION+HITBOX) && wall.x+i >= first.x)
-			{
-				float cost_gradient = fabs((float)50/i);
-				if (arena[wall.x+i][wall.y] == WALL || arena[wall.x+i][wall.y] == UNKNOWN || arena[wall.x+i][wall.y] == WILLCOLIDE)
-					break;
-				arena[wall.x+i][wall.y] += cost_gradient;
-				i--;
-			}
-		}
-		if (wall.direction[3])//up
-		{
-			float j;
-			for(j =1; j<HITBOX && wall.y+j <= last.y;j++)
-			{
-				if (arena[wall.x][wall.y+j] != WALL && arena[wall.x][wall.y+j] != UNKNOWN)
-					arena[wall.x][wall.y+j] = WILLCOLIDE;
-			}
-			while(j<RESOLUTION+HITBOX && wall.y+j <= last.y)
-			{
-				float cost_gradient = fabs((float)50/j);
-				if (arena[wall.x][wall.y+j] == WALL || arena[wall.x][wall.y+j] == UNKNOWN || arena[wall.x][wall.y+j] == WILLCOLIDE)
-					break;
-				arena[wall.x][wall.y+j] += cost_gradient;
-				j++;
-			}
-		}
-		if(wall.direction[4])//down
-		{
-			float j;
-			for(j =-1; j>-HITBOX && wall.y+j >= first.y;j--)
-			{
-				if (arena[wall.x][wall.y+j] != WALL && arena[wall.x][wall.y+j] != UNKNOWN)
-					arena[wall.x][wall.y+j] = WILLCOLIDE;
-			}
-			while(j>-(RESOLUTION+HITBOX)&& wall.y+j >= first.y)
-			{
-				float cost_gradient = fabs((float)50/j);
-				if (arena[wall.x][wall.y+j] == WALL || arena[wall.x][wall.y+j] == UNKNOWN || arena[wall.x][wall.y+j] == WILLCOLIDE)
-					break;
-				arena[wall.x][wall.y+j] += cost_gradient;
-				j--;
-			}
-		}
-		double sideLength = HITBOX/sqrt(2);
-		double resolutionLength = RESOLUTION/sqrt(2);
-		if(wall.direction[5])//top right
-		{
-			float i;
-			for(i= 1; i<sideLength && wall.x+i<=last.x && wall.y+i <= last.y; i++)
-			{
-				if (arena[wall.x+i][wall.y+i] != WALL && arena[wall.x+i][wall.y+i] != UNKNOWN)
-					arena[wall.x+i][wall.y+i] = WILLCOLIDE;
-			}
-			while(i<resolutionLength+sideLength&& wall.x+i<=last.x && wall.y+i <= last.y)
-			{
-				float cost_gradient = fabs((float)50/i);
-				if (arena[wall.x+i][wall.y+i] == WALL || arena[wall.x+i][wall.y+i] == UNKNOWN || arena[wall.x+i][wall.y+i] == WILLCOLIDE)
-					break;
-				arena[wall.x+i][wall.y+i] += cost_gradient;
-				i++;
-			}
-		}
-		if(wall.direction[6])//top left
-		{
-			float i;
-			for(i= 1; i<sideLength && wall.x-i >= first.x && wall.y+i <= last.y; i++)
-			{
-				if (arena[wall.x-i][wall.y+i] != WALL && arena[wall.x-i][wall.y+i] != UNKNOWN)
-					arena[wall.x-i][wall.y+i] = WILLCOLIDE;
-			}
-			while(i<resolutionLength+sideLength && wall.x-i >= first.x && wall.y+i <= last.y)
-			{
-				float cost_gradient = fabs((float)50/i);
-				if(arena[wall.x-i][wall.y+i] == WALL || arena[wall.x-i][wall.y+i]==UNKNOWN ||arena[wall.x-i][wall.y+i] == WILLCOLIDE)
-					break;
-				arena[wall.x-i][wall.y+i] += cost_gradient;
-				i++;
-			}
-		}
-	  if(wall.direction[7])//bottom right
-		{
-			float i;
-			for(i = 1; i<sideLength && wall.x+i <= last.x && wall.y-i >= first.y; i++)
-			{
-				if (arena[wall.x+i][wall.y-i] != WALL && arena[wall.x+i][wall.y-i] != UNKNOWN)
-					arena[wall.x+i][wall.y-i] = WILLCOLIDE;
-			}
-			while(i<resolutionLength+sideLength && wall.x+i <= last.x && wall.y-i >= first.y)
-			{
-				float cost_gradient = fabs((float)50/i);
-				if(arena[wall.x+i][wall.y-i] == WALL || arena[wall.x+i][wall.y-i]==UNKNOWN ||arena[wall.x+i][wall.y-i] == WILLCOLIDE)
-					break;
-				arena[wall.x+i][wall.y-i] += cost_gradient;
-				i++;
-			}
-		}
-	 	if(wall.direction[8])//bottom left
-		{
-			float i;
-			for(int i = 1; i<sideLength && wall.x-i >= first.x && wall.y-i >= first.y; i++)
-			{
-				if (arena[wall.x-i][wall.y-i] != WALL && arena[wall.x-i][wall.y-i] != UNKNOWN)
-					arena[wall.x-i][wall.y-i] = WILLCOLIDE;
-			}
-			while(i<resolutionLength+sideLength&& wall.x-i >= first.x && wall.y-i >= first.y)
-			{
-				float cost_gradient = fabs((float)50/i);
-				if(arena[wall.x-i][wall.y-i] == WALL || arena[wall.x-i][wall.y-i]==UNKNOWN ||arena[wall.x-i][wall.y-i] == WILLCOLIDE)
-					break;
-				arena[wall.x-i][wall.y-i] += cost_gradient;
-				i++;
+				for(int j =-RESOLUTION; j<=RESOLUTION;j++)
+				{
+					if(wall.y+j >= first.y && wall.y+j <= last.y)//checks if valid y-range
+					{
+						if(arena[wall.x+i][wall.y+j]!=WALL &&arena[wall.x+i][wall.y+j]!=UNKNOWN)//makes sure the current position is not a wall or unknown
+						{
+							float cost_gradient = (float)70/sqrt(pow(i,2) +pow(j,2));
+							if(i<0 && j<0 && wall.direction[8]) //bottom left
+							{
+								if(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0)
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+							else if(i<0 && j>0 && wall.direction[6]) //top left
+							{
+								if(arena[wall.x+i][wall.y+j]+ cost_gradient>=255.0)
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+							else if (i<0 && j ==0 && wall.direction[2])//left
+							{
+								if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//left and down
+									arena[wall.x+i][wall.y+j]= 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+							else if (i ==0 && j< 0 && wall.direction[4]) //down
+							{
+								if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))//down and left corner
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+							else if (i ==0 && j>0 && wall.direction[3])//up
+							{
+								if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+							else if (i>0 && j<0 && wall.direction[7])//bottom right
+							{
+								if(arena[wall.x+i][wall.y+j]+ cost_gradient>=255.0)
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j]+= cost_gradient;
+							}
+							else if (i>0 && j ==0 && wall.direction[1])//right
+							{
+								if((arena[wall.x+i][wall.y+j] + cost_gradient>=255.0))
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+							else if (i>0 && j>0 && wall.direction[5]) //top right
+							{
+								if(arena[wall.x+i][wall.y+j] + cost_gradient>=255.0)
+									arena[wall.x+i][wall.y+j] = 255.0;
+								else
+									arena[wall.x+i][wall.y+j] += cost_gradient;
+							}
+						}
+					}
+				}
 			}
 		}
 	}
+
 }
+
 
 Image::Image(const matrix & oriImage, const Pose & first, const Pose & last)
 {
@@ -331,6 +269,7 @@ void Image::insert_borders ()
 			}
 		}
 	}
+	std::cout<<"Done inserting borders"<<std::endl;
 }
 vector<bool> Image::checkSpace (int i, int j)
 {
@@ -394,14 +333,14 @@ bool Image::planner (Pose & start, Pose & goal)
 	matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
 	openList.push(Position(start, 0, 0)); //pushes the start postion first
 	Pose currentPoint;// the current point being checked
-	while(distanceToGoal(currentPoint, goal)>HITBOX/2){ //keep checking if the current point is greater than 5 cells away from the goal
+	while(distanceToGoal(currentPoint, goal)>5){ //keep checking if the current point is greater than 5 cells away from the goal
 		if(openList.empty())//check if there are no moves left in the priority queue
 		{
 			return false;
 		}
 		closedList.push_back(std::unique_ptr<Position>(new Position(openList.top())));//grabs the lowest cost in the priority queue
 		currentPoint = closedList.back()->pose;//gets the point from priority queue
-		openList.pop();// gets rid of the low9est cost from the priority queue
+		openList.pop();// gets rid of the lowest cost from the priority queue
 		if(space[currentPoint.x][currentPoint.y]== 0)//checks if the space is not been visited yet
 		{
 			space[currentPoint.x][currentPoint.y]= 1;
@@ -419,13 +358,11 @@ bool Image::planner (Pose & start, Pose & goal)
 	closedList.push_back(std::unique_ptr<Position>(new Position(goal , 0, closedList.back().get()))); // push the goal to the list
 	Position *currentPose = closedList.back().get();
 	poseVector points;
-
 	while(currentPose!=0) //gets the path that made it to the goal first
 	{
 		points.insert(points.begin(), currentPose->pose);
 		currentPose = currentPose->prePosition;
 	}
-	points.erase(points.begin());
 	path = pathMessage(points.size());
 	for(int i =0; i<points.size();i++)
 	{
