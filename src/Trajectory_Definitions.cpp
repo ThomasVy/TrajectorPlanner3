@@ -503,6 +503,7 @@ const pathMessage & Image::getPath ()
 {
 	return path;
 }
+
 Pose findNearestFreeSpace(Pose & finalGoal, Pose & start)
 {
 		Pose goal;
