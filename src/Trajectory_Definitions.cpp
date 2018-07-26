@@ -331,6 +331,7 @@ void Image::insert_borders ()
 			}
 		}
 	}
+	cout<<"Done inserting borders"<<endl;
 }
 vector<bool> Image::checkSpace (int i, int j)
 {
