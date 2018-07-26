@@ -99,6 +99,8 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		ROS_INFO("Reach destination with path./n Now exiting program...");
 		exit(0);
 	}
+	sendTransform();
+	pub.publish(path);
 }
 
 int main(int argc, char ** argv)

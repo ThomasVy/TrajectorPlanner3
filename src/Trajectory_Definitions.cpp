@@ -331,7 +331,6 @@ void Image::insert_borders ()
 			}
 		}
 	}
-	cout<<"Done inserting borders"<<endl;
 }
 vector<bool> Image::checkSpace (int i, int j)
 {
@@ -504,7 +503,6 @@ const pathMessage & Image::getPath ()
 {
 	return path;
 }
-
 Pose findNearestFreeSpace(Pose & finalGoal, Pose & start)
 {
 		Pose goal;
