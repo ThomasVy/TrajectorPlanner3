@@ -503,3 +503,14 @@ const pathMessage & Image::getPath ()
 {
 	return path;
 }
+
+Pose findNearestFreeSpace(Pose & finalGoal, Pose & start)
+{
+		Pose goal;
+		positionPriorityQueue priortity_queue;
+		while(!priortity_queue.empty())
+		{
+
+		}
+		return goal;
+}
