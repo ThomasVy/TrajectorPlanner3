@@ -33,6 +33,14 @@ Pose& Pose::operator=(const Pose & rhs)
 	return *this;
 
 }
+bool Pose::operator==(const Pose & rhs)
+{
+	if(x!=rhs.x||y!=rhs.y||radian!=rhs.radian)
+	{
+		return false;
+	}
+	return true;
+}
 Pose Pose::endPose(float curvature, float length)
 {
 	Pose pose;
@@ -503,13 +511,13 @@ const pathMessage & Image::getPath ()
 {
 	return path;
 }
-Pose findNearestFreeSpace(Pose & finalGoal, Pose & start)
-{
-		Pose goal;
-		positionPriorityQueue priortity_queue;
-		while(!priortity_queue.empty())
-		{
-
-		}
-		return goal;
-}
+// Pose findNearestFreeSpace(Pose & finalGoal, Pose & start)
+// {
+// 		Pose goal;
+// 		positionPriorityQueue priortity_queue;
+// 		while(!priortity_queue.empty())
+// 		{
+//
+// 		}
+// 		return goal;
+// }

@@ -56,7 +56,7 @@ typedef struct Pose{
 	Pose(double x, double y):x(x),y(y),radian(0){}; //Constructor
 	Pose(const Pose & rhs); //Copy Constructor
 	Pose& operator=(const Pose & rhs); //Assignment operator
-	bool operator==(const Post &rhs); //Comparing operator
+	bool operator==(const Pose &rhs); //Comparing operator
 	Pose endPose(float curvature, float length); //Calculating end position for a path
 
 }Pose;

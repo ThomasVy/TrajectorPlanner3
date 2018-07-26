@@ -68,10 +68,10 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	Pose last(lastx, lasty);
 	Image img(original, first, last); //creates a converted image bsaed off original map
 	img.insert_borders(); //creates cost map
-	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
-	{
-		Pose goal = findNearestFreeSpace(finalGoal, start);
-	}
+	// if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
+	// {
+	// 	Pose goal = findNearestFreeSpace(finalGoal, start);
+	// }
 	nav_msgs::Path path;
 	static int num =0;
 	path.header.seq = num++;
