@@ -97,7 +97,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	if(goal == finalGoal)
 	{
 		ROS_INFO("Reach destination with path./n Now exiting program...");
-		
+
 	}
 	sendTransform();
 	pub.publish(path);

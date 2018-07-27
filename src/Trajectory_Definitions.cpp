@@ -400,7 +400,14 @@ bool Image::planner (Pose & start, Pose & goal)
 	if (arena.size() == 0 ||arena[0].size()==0) //checks if the size is valid
 				return false;
 	matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
-	openList.push(Position(start, 0, 0)); //pushes the start postion first
+	for(double i = 0; i<2*M_PI; i+=M_PI/6)
+	{
+		Pose newStart;
+		newStart.radian = start.radian+i;
+		newStart.x = start.x+cos(radian);
+		newStart.y = start.y+sin(radian);
+		openList.push(Position(newStart, 0, 0));
+	}
 	Pose currentPoint;// the current point being checked
 	while(distanceToGoal(currentPoint, goal)>HITBOX/2){ //keep checking if the current point is greater than 5 cells away from the goal
 		if(openList.empty())//check if there are no moves left in the priority queue
@@ -433,7 +440,7 @@ bool Image::planner (Pose & start, Pose & goal)
 		points.insert(points.begin(), currentPose->pose);
 		currentPose = currentPose->prePosition;
 	}
-	points.erase(points.begin());
+	//points.erase(points.begin());
 	path = pathMessage(points.size());
 	for(int i =0; i<points.size();i++)
 	{
