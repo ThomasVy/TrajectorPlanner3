@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   message_generation
   tf
+  interactive_markers
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES trajectory_planner
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs message_runtime interactive_markers
   DEPENDS system_lib
 )
 
@@ -120,8 +121,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
   include
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -185,6 +186,8 @@ include_directories(
 ## Testing ##
 #############
 
+#
+
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_trajectory_planner.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
@@ -197,6 +200,10 @@ include_directories(
 #add_dependencies(trajectory_planner trajectory_planner_generate_messages_cpp)
 set (CMAKE_CXX_STANDARD 11)
 
-add_executable(traject src/Trajectory_node.cpp src/Trajectory_Definitions.cpp)
-target_link_libraries(traject ${catkin_LIBRARIES})
-add_dependencies(traject trajectory_planner_generate_messages_cpp)
+add_executable(trajecto src/Trajectory_node.cpp src/Trajectory_Definitions.cpp)
+target_link_libraries(trajecto ${catkin_LIBRARIES})
+add_dependencies(trajecto trajectory_planner_generate_messages_cpp)
+
+add_executable(basic_controls src/basic_controls.cpp)
+target_link_libraries(basic_controls ${catkin_LIBRARIES})
+add_dependencies(basic_controls basic_controls_generate_messages_cpp)
