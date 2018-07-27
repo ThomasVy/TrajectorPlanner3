@@ -102,7 +102,7 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 		Pose newPoint = pose.endPose(curvature, LENGTH); //gets new potenial position
 		if(newPoint.x>=first.x && newPoint.x<=last.x && newPoint.y>=first.y &&newPoint.y <=last.y)//checks if within range
 		{
-			if(checkNeighbour(pose, newPoint, walls))//checks if the new potenial spot is valid
+			if(checkNeighbour(pose, newPoint, walls) == 1)//checks if the new potenial spot is valid
 			{
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
 					float temp = LENGTH + abs(i)*3*LENGTH;
@@ -114,7 +114,7 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 	}
 	return neighbours;
 }
-bool Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
+int Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
 {
 	double diffx = next.x - current.x;
 	double diffy = next.y - current.y;
@@ -125,32 +125,36 @@ bool Position::checkNeighbour (const Pose & current, const Pose & next, const ma
 	{
 		for(double j = incrementy; fabs(j)<=fabs(diffy); j+= incrementy)
 		{
-			if(walls[current.x][current.y+j]==WILLCOLIDE||walls[current.x][current.y+j]==WALL||walls[current.x][current.y+j]==UNKNOWN)
-				return false;
+			if(walls[current.x][current.y+j]==WILLCOLIDE||walls[current.x][current.y+j]==WALL)
+				return 0;
+			if(walls[current.x][current.y+j]==UNKNOWN)
+				return -1;
 		}
-			return true;
+			return 1;
 	}
 	else if (fabs(incrementy)<0.05)//only x direction
 	{
 		for(double i =incrementx; fabs(i)<=fabs(diffx); i+= incrementx)
 		{
-			if(walls[current.x+i][current.y]==WILLCOLIDE||walls[current.x+i][current.y]==WALL||walls[current.x+i][current.y]==UNKNOWN)
-				return false;
+			if(walls[current.x+i][current.y]==WILLCOLIDE||walls[current.x+i][current.y]==WALL)
+				return 0;
+			if(walls[current.x+i][current.y]==UNKNOWN)
+				return -1;
 		}
-			return true;
+			return 1;
 	}
 	else
 	{
 		for(double x = incrementx, y = incrementy; fabs(x)<=fabs(diffx); x+=incrementx, y+= incrementy)
 		{
-			if(walls[current.x+x][current.y+y]==WILLCOLIDE||walls[current.x+x][current.y+y]==WALL||walls[current.x+x][current.y+y]==UNKNOWN)
-				return false;
+			if(walls[current.x+x][current.y+y]==WILLCOLIDE||walls[current.x+x][current.y+y]==WALL)
+				return 0;
+			if(walls[current.x+x][current.y+y]==UNKNOWN)
+				return -1;
 		}
-		return true;
+		return 1;
 	}
 }
-
-
 
 //Image class definitions
 void Image::dilation(Wall & wall)
@@ -331,6 +335,7 @@ void Image::insert_borders ()
 			}
 		}
 	}
+	cout<<"Completed Inserting Borders"<<endl;
 }
 vector<bool> Image::checkSpace (int i, int j)
 {
