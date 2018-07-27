@@ -404,8 +404,8 @@ bool Image::planner (Pose & start, Pose & goal)
 	{
 		Pose newStart;
 		newStart.radian = start.radian+i;
-		newStart.x = start.x+cos(radian);
-		newStart.y = start.y+sin(radian);
+		newStart.x = start.x+cos(newStart.radian);
+		newStart.y = start.y+sin(newStart.radian);
 		openList.push(Position(newStart, 0, 0));
 	}
 	Pose currentPoint;// the current point being checked
