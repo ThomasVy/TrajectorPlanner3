@@ -200,9 +200,9 @@ include_directories(
 #add_dependencies(trajectory_planner trajectory_planner_generate_messages_cpp)
 set (CMAKE_CXX_STANDARD 11)
 
-add_executable(trajecto src/Trajectory_node.cpp src/Trajectory_Definitions.cpp)
-target_link_libraries(trajecto ${catkin_LIBRARIES})
-add_dependencies(trajecto trajectory_planner_generate_messages_cpp)
+add_executable(traject src/Trajectory_node.cpp src/Trajectory_Definitions.cpp)
+target_link_libraries(traject ${catkin_LIBRARIES})
+add_dependencies(traject trajectory_planner_generate_messages_cpp)
 
 add_executable(basic_controls src/basic_controls.cpp)
 target_link_libraries(basic_controls ${catkin_LIBRARIES})

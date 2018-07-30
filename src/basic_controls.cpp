@@ -55,9 +55,9 @@ Marker makeBox( InteractiveMarker &msg )
   Marker marker;
 
   marker.type = Marker::CYLINDER;
-  marker.scale.x = msg.scale * 0.2;
-  marker.scale.y = msg.scale * 0.2;
-  marker.scale.z = msg.scale * 0.5;
+  marker.scale.x = msg.scale * 0.1;
+  marker.scale.y = msg.scale * 0.1;
+  marker.scale.z = msg.scale * 0.4;
   marker.color.r = 0;
   marker.color.g = 1;
   marker.color.b = 0;
@@ -100,6 +100,11 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
                    << ", " << feedback->mouse_point.y
                    << ", " << feedback->mouse_point.z
                    << " in frame " << feedback->header.frame_id;
+
+    if (feedback->event_type == 5) //Added functionality for publishing a pose to goal_post, but only when the interactive goal marker is put down on the map (i.e. event type is 5)
+    {
+     goalPublisher.publish(feedback->pose);
+    }
   }
 
   switch ( feedback->event_type )
@@ -150,11 +155,6 @@ void alignMarker( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &f
       << feedback->pose.position.x
       << ", " << feedback->pose.position.y
       << ", " << feedback->pose.position.z);
-
-  if (feedback->mouse_point_valid == true)
-  {
-    goalPublisher.publish(pose);
-  }
 
   server->setPose( feedback->marker_name, pose );
   server->applyChanges();
@@ -210,39 +210,13 @@ void makeChessPieceMarker( const tf::Vector3& position )
 }
 // %EndTag(ChessPiece)%
 
-// %Tag(Menu)%
-void makeMenuMarker( const tf::Vector3& position )
-{
-  InteractiveMarker int_marker;
-  int_marker.header.frame_id = "base_link";
-  tf::pointTFToMsg(position, int_marker.pose.position);
-  int_marker.scale = 1;
-
-  int_marker.name = "context_menu";
-  int_marker.description = "Context Menu\n(Right Click)";
-
-  InteractiveMarkerControl control;
-
-  control.interaction_mode = InteractiveMarkerControl::MENU;
-  control.name = "menu_only_control";
-
-  Marker marker = makeBox( int_marker );
-  control.markers.push_back( marker );
-  control.always_visible = true;
-  int_marker.controls.push_back(control);
-
-  server->insert(int_marker);
-  server->setCallback(int_marker.name, &processFeedback);
-  menu_handler.apply( *server, int_marker.name );
-}
-// %EndTag(Menu)%
-
 // %Tag(main)%
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "basic_controls");
   ros::NodeHandle n;
 
+  //Publishes pose of goal marker to goal_post for Trajectory_node subscriber
   goalPublisher = n.advertise<geometry_msgs::Pose>("goal_post", 100);
 
   // create a timer to update the published transforms
@@ -260,7 +234,7 @@ int main(int argc, char** argv)
 
   tf::Vector3 position;
 
-  position = tf::Vector3(0, 0, 0);
+  position = tf::Vector3(0, 0, 0.2);
   makeChessPieceMarker( position );
   server->applyChanges();
 

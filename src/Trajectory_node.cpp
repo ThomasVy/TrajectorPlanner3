@@ -16,7 +16,6 @@ using namespace std;
 
 ros::Publisher pub; //publisher to path
 tf::TransformListener * plr; //transform listener
-Pose * goal;
 //sends the transform of the path relative to the map
 
 void calculations (Pose & goal);
@@ -34,12 +33,12 @@ void sendTransform()
 
 void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 {
-
-  goal.x = orimsg->position.x;
+	Pose goal;
+  goal.x = orimsg->position.x; //Stores goal marker so we don't get seg faults
 	goal.y = orimsg->position.y;
 
-	goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution;
-	goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution;
+	goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
+	goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
 
   ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
 	if(msg != nullptr)
@@ -55,7 +54,6 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& orginalmsg)
 
 void calculations (Pose & goal)
 {
-
 	tf::StampedTransform transform;
   try{
     plr->lookupTransform("/map", "/base_link",
@@ -94,7 +92,6 @@ void calculations (Pose & goal)
 	}
 	if(lastx<firstx || lasty<firsty) //If there are no bounds.
 		{
-    	ROS_INFO("wtf");
 			return;
 	  }
 	if(original[goal.x][goal.y]!=0 || original[start.x][start.y]!=0) // if the goal or start not in free space end the path finding
@@ -103,6 +100,7 @@ void calculations (Pose & goal)
 			return;
 		}
 
+  ROS_INFO("ye");
 	Pose first(firstx, firsty);
 	Pose last(lastx, lasty);
 	Image img(original, first, last); //creates a converted image bsaed off original map
@@ -133,7 +131,7 @@ void calculations (Pose & goal)
 
 int main(int argc, char ** argv)
 {
-	goal = nullptr;
+	Pose goal;
 	ros::init(argc, argv, "TrajectoryNode"); //init the node
 	ros::NodeHandle n;
 	pub = n.advertise<nav_msgs::Path>("path", 1000);// publishes to path
