@@ -5,7 +5,7 @@
 #include <tf/transform_listener.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include <iostream>
-#include <interactive_markers/interactive_marker_server.h>
+#include <geometry_msgs/Pose.h>
 using namespace std;
 /*
 	Uses ros to subscibe to the /map and publishes a path to /path
