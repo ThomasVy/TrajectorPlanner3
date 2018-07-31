@@ -114,6 +114,10 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 	}
 	return neighbours;
 }
+listOfPositions Position::lookForClosestUnknown (const matrix& walls, const Pose & goal, const Pose & first, const Pose & last, positionPriorityQueue & unknownQueue)
+{
+
+}
 int Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
 {
 	double diffx = next.x - current.x;
@@ -380,7 +384,8 @@ vector<bool> Image::checkSpace (int i, int j)
 			direct[0] =true;
 			direct[3] = true;
 		}
-		if(convertedImage[i][j-1] == EMPTY_SPACE)//down space
+		if(convertedImage[i
+			][j-1] == EMPTY_SPACE)//down space
 		{
 			direct[0] =true;
 			direct[4] = true;
@@ -509,13 +514,38 @@ const pathMessage & Image::getPath ()
 	return path;
 }
 
-Pose findNearestFreeSpace(Pose & finalGoal, Pose & start)
+Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 {
 		Pose goal;
-		positionPriorityQueue priortity_queue;
-		while(!priortity_queue.empty())
+		positionPriorityQueue unknownQueue; //add unknowns
+		positionPriorityQueue exploreQueue;
+		if (arena.size() == 0 ||arena[0].size()==0) //checks if the size is valid
+				return false;
+		matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
+		Pose currentPoint;
+		for(double i = 0; i<2*M_PI; i+=M_PI/6)
 		{
-
+			Pose newStart;
+			newStart.radian = start.radian+i;
+			newStart.x = start.x+cos(newStart.radian);
+			newStart.y = start.y+sin(newStart.radian);
+			exploreQueue.push(Position(newStart, 0, 0));
 		}
+		while(!exploreQueue.empty())
+		{
+			currentPoint = exploreQueue.top().pose;
+			exploreQueue.pop();
+			if(space[currentPoint.x][currentPoint.y]==0)
+		  {
+				space[currentPoint.x][currentPoint.y] = 1
+				std::vector<Position> neighbours = lookForClosestUnknown(arena, finalGoal, start unknownQueue);
+				for(int i =0; i<neighbours.size(); i++)
+				{
+					exploreQueue.push(neighbours[i]); //push all the neighbours to the currnt point to the priority queue
+				}
+			}
+		}
+		if(!unknownQueue.empty())
+			goal= unknownQueue.top().pose;
 		return goal;
 }

@@ -70,7 +70,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	img.insert_borders(); //creates cost map
 	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
 	{
-		Pose goal = findNearestFreeSpace(finalGoal, start);
+		Pose goal = img.findNearestFreeSpace(finalGoal, start);
 	}
 	nav_msgs::Path path;
 	static int num =0;
