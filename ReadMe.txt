@@ -2,7 +2,7 @@ Author:Thomas Vy
 Email: thomas.vy@ucalgary.ca
 Date: June 12, 2018
 
-Credit to Gayan Brahmanage for the formulation of the path planner first in his python code.
+Credit to Gayan Brahmanage for the formulation of the path planner first in his python code. Thanks Gayan!
 
 Highly recommended that your run rviz to see the path planned 
 

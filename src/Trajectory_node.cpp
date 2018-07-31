@@ -5,6 +5,7 @@
 #include <tf/transform_listener.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include <iostream>
+#include <geometry_msgs/Pose.h>
 using namespace std;
 /*
 	Uses ros to subscibe to the /map and publishes a path to /path
@@ -12,10 +13,14 @@ using namespace std;
 	Date: June 12 2018
 	Email: thomas.vy@ucalgary.ca
 */
+
 ros::Publisher pub; //publisher to path
 tf::TransformListener * plr; //transform listener
-Pose finalGoal(2001, 1999); //the goal position
 //sends the transform of the path relative to the map
+
+void calculations (Pose & goal);
+nav_msgs::OccupancyGrid::ConstPtr msg;
+
 void sendTransform()
 {
 	static tf::TransformBroadcaster broadcaster;
@@ -25,7 +30,29 @@ void sendTransform()
 				ros::Time::now(), "map", "path" ));
 }
 //publishes the path to /path
-void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
+
+void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
+{
+	Pose goal;
+  goal.x = orimsg->position.x; //Stores goal marker so we don't get seg faults
+	goal.y = orimsg->position.y;
+
+	goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
+	goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
+
+  ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
+	if(msg != nullptr)
+	{
+		calculations(goal);
+	}
+}
+
+void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& orginalmsg)
+{
+	msg = orginalmsg;
+}
+
+void calculations (Pose & goal)
 {
 	tf::StampedTransform transform;
   try{
@@ -37,10 +64,11 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
   }
 	int grid_x = (transform.getOrigin().x() - (int)msg->info.origin.position.x) / msg->info.resolution; //changes the robot real position to the grid
   int grid_y = (transform.getOrigin().y() - (int)msg->info.origin.position.y) / msg->info.resolution;//changes the robot real position to the grid
-	ROS_INFO("current pose: %d, %d", grid_x, grid_y);
+
 	int firstx =(int)msg->info.width, firsty =(int)msg->info.height , lastx =-1,lasty =-1; //reduces the size of the map.
+
 	Pose start(grid_x,grid_y, tf::getYaw(transform.getRotation())); //the start position (the robot's current position)
-	Pose goal = finalGoal;
+
 	matrix original((int)msg->info.height, vector<double>((int)msg->info.width)); //the original map in a 2d vector
 	for(int y =0 , k=0; y<(int)msg->info.height; y++)
 	{
@@ -63,7 +91,16 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 		}
 	}
 	if(lastx<firstx || lasty<firsty) //If there are no bounds.
-		return;
+		{
+			return;
+	  }
+	if(original[goal.x][goal.y]!=0 || original[start.x][start.y]!=0) // if the goal or start not in free space end the path finding
+		{
+		  ROS_INFO("no. x: [%f], y: [%f], start: [%f], [%f], original goal: [%f], original start: [%f]", goal.x, goal.y, start.x, start.y, original[goal.x][goal.y], original[start.x][start.y]);
+			return;
+		}
+
+  ROS_INFO("ye");
 	Pose first(firstx, firsty);
 	Pose last(lastx, lasty);
 	Image img(original, first, last); //creates a converted image bsaed off original map
@@ -79,7 +116,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	path.header.frame_id = "path";
 	if(img.planner(start, goal)) //plans the path if it find a path it publishes it
 	{
-		ROS_INFO("Found a path");
+		ROS_INFO("Found Path");
 		path.poses = img.getPath();
 		for(int i =0; i<path.poses.size();i++)
 		{
@@ -89,7 +126,7 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 	}
 	else
 	{
-		ROS_ERROR("Could NOT find a path");
+		ROS_ERROR("Could NOT find path");
 		return;
 	}
 	sendTransform();
@@ -103,10 +140,12 @@ void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 
 int main(int argc, char ** argv)
 {
+	Pose goal;
 	ros::init(argc, argv, "TrajectoryNode"); //init the node
 	ros::NodeHandle n;
 	pub = n.advertise<nav_msgs::Path>("path", 1000);// publishes to path
-	ros::Subscriber sub = n.subscribe("map", 1, publishInfo);// subscribes to map
+	ros::Subscriber sub = n.subscribe("map", 1000, publishInfo);// subscribes to map
+	ros::Subscriber goal_marker_sub = n.subscribe("goal_post", 100, b_cCallback); //subscribes to feedback from basic_controls
 	tf::TransformListener listener; //tf listener
 	plr = &listener;
 	ros::spin();
