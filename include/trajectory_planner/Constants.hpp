@@ -75,11 +75,11 @@ class Position{
 		Position():cost(0),total_cost(0){} //default constructor
 		Position& operator=(const Position & rhs);//assignment operator
 		bool operator>(Position const& right) const {return total_cost > right.total_cost;}// comparing for the priority queue
-		listOfPositions getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose &last);// gets the neighbours of this position
+		listOfPositions getNeighbours (const matrix & walls, const Pose & goal);// gets the neighbours of this position
 
 
-		listOfPositions lookForClosestUnknown (const matrix & walls, const Pose & goal, const Pose & first, const Pose &last, positionPriorityQueue & unknownQueue);
-		bool checkNeighbour (const Pose & current, const Pose & next,const matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
+		listOfPositions lookForClosestUnknown (const matrix & walls, const Pose & goal, positionPriorityQueue & unknownQueue);
+		int checkNeighbour (const Pose & current, const Pose & next,const matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
 };
 
 //Hold the image grids and do calculations for them
@@ -101,6 +101,6 @@ class Image{
 		doubleVector Berstein(doubleVector & arr, int n, int k);//Does some math
 		double binomialCoeff(int n, int k);//calculates binomial coefficient
 		const pathMessage & getPath ();//gets the path message
-		Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start);
+		Pose findNearestFreeSpace(Pose & finalGoal, Pose & start);
 };
 #endif

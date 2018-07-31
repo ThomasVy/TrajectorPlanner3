@@ -101,15 +101,13 @@ Position& Position::operator=(const Position & rhs)
 	}
 	return *this;
 }
-listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose & last)
+listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal)
 {
 	listOfPositions neighbours;
 	for(float i =-1; i<=1;i+=0.5)//checks left, straight, and right movement.
 	{
 		float curvature = i*CURVATURE;
 		Pose newPoint = pose.endPose(curvature, LENGTH); //gets new potenial position
-		if(newPoint.x>=first.x && newPoint.x<=last.x && newPoint.y>=first.y &&newPoint.y <=last.y)//checks if within range
-		{
 			if(checkNeighbour(pose, newPoint, walls) == 1)//checks if the new potenial spot is valid
 			{
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
@@ -118,13 +116,33 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 					float neighbourTotalCost = distanceToGoal(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
 					neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));// pushes it in the list of potential positions to move
 			}
-		}
 	}
 	return neighbours;
 }
-listOfPositions Position::lookForClosestUnknown (const matrix& walls, const Pose & goal, const Pose & first, const Pose & last, positionPriorityQueue & unknownQueue)
+listOfPositions Position::lookForClosestUnknown (const matrix& walls, const Pose & goal, positionPriorityQueue & unknownQueue)
 {
-
+	listOfPositions neighbours;
+	for(float i=-1; i<=1;i+=0.5)
+	{
+		float curvature = i*CURVATURE;
+		Pose newPoint = pose.endPose(curvature, LENGTH);
+			int cN = checkNeighbour(pose, newPoint, walls) ;
+			if(cN == 1)//checks if the new potenial spot is valid
+			{
+					float space = walls[(int)newPoint.x][(int)newPoint.y];
+					float temp = LENGTH + abs(i)*3*LENGTH;
+					float new_cost = cost + temp;
+					float neighbourTotalCost = distanceToGoal(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
+					neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));// pushes it in the list of potential positions to move
+			}
+			else if(cN == -1)
+			{
+				float space = walls[pose.x][pose.y];
+				double cost = space + distanceToGoal(pose, goal)+cost;
+				unknownQueue.push(Position(pose, cost, nullptr));
+			}
+		}
+	return neighbours;
 }
 int Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
 {
@@ -430,7 +448,7 @@ bool Image::planner (Pose & start, Pose & goal)
 		if(space[currentPoint.x][currentPoint.y]== 0)//checks if the space is not been visited yet
 		{
 			space[currentPoint.x][currentPoint.y]= 1;
-			std::vector<Position> neighbours = closedList.back()->getNeighbours(arena, goal, first , last); // gets the neighbours to the current point
+			std::vector<Position> neighbours = closedList.back()->getNeighbours(arena, goal); // gets the neighbours to the current point
 			for(int i =0; i<neighbours.size(); i++)
 			{
 				openList.push(neighbours[i]); //push all the neighbours to the currnt point to the priority queue
@@ -534,8 +552,6 @@ Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 		Pose goal;
 		positionPriorityQueue unknownQueue; //add unknowns
 		positionPriorityQueue exploreQueue;
-		if (arena.size() == 0 ||arena[0].size()==0) //checks if the size is valid
-				return false;
 		matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
 		Pose currentPoint;
 		for(double i = 0; i<2*M_PI; i+=M_PI/6)
@@ -548,17 +564,18 @@ Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 		}
 		while(!exploreQueue.empty())
 		{
-			currentPoint = exploreQueue.top().pose;
-			exploreQueue.pop();
+			Position temp = exploreQueue.top();
+			currentPoint =temp.pose;
 			if(space[currentPoint.x][currentPoint.y]==0)
 		  {
-				space[currentPoint.x][currentPoint.y] = 1
-				std::vector<Position> neighbours = lookForClosestUnknown(arena, finalGoal, start unknownQueue);
+				space[currentPoint.x][currentPoint.y] = 1;
+				std::vector<Position> neighbours =temp.lookForClosestUnknown(arena, finalGoal, unknownQueue);
 				for(int i =0; i<neighbours.size(); i++)
 				{
 					exploreQueue.push(neighbours[i]); //push all the neighbours to the currnt point to the priority queue
 				}
 			}
+			exploreQueue.pop();
 		}
 		if(!unknownQueue.empty())
 			goal= unknownQueue.top().pose;
