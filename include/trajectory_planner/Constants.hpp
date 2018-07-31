@@ -25,7 +25,7 @@ const int WALL=-1; //The wall space value
 const int EMPTY_SPACE =1; //The empty space value
 const int RESOLUTION = 10; //The distance from wall to calculate(for cost)
 const float LENGTH = 2; //The distance between points(higher number = fast computation but inaccurate path)
-const float CURVATURE = 0.2; //The curvature the robot takes
+const float CURVATURE = 0.1; //The curvature the robot takes
 
 //The typedefs
 typedef vector< vector<double> > matrix; //Holds the map cells

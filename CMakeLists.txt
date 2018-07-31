@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   message_generation
   tf
+  interactive_markers
 )
 
 ## System dependencies are found with CMake's conventions
@@ -120,8 +121,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
   include
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -200,3 +201,7 @@ set (CMAKE_CXX_STANDARD 11)
 add_executable(traject src/Trajectory_node.cpp src/Trajectory_Definitions.cpp)
 target_link_libraries(traject ${catkin_LIBRARIES})
 add_dependencies(traject trajectory_planner_generate_messages_cpp)
+
+add_executable(basic_controls src/basic_controls.cpp)
+target_link_libraries(basic_controls ${catkin_LIBRARIES})
+add_dependencies(basic_controls basic_controls_generate_messages_cpp)
