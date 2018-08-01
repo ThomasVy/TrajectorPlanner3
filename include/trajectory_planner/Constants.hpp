@@ -96,10 +96,6 @@ class Image{
 		void insert_borders ();//creates the arena by locating all wall cells
 		vector<bool> checkSpace (int i, int j);//checks spaces around a wall to see which direction is open space
 		bool planner (Pose & start, Pose & goal);//plans the path for the map
-		void Bezier (poseVector & points, int num =PRECISION);// creates the bspline curve
-		void multipleVectors(doubleVector & berst, Pose point);//multiples two Vectors together
-		doubleVector Berstein(doubleVector & arr, int n, int k);//Does some math
-		double binomialCoeff(int n, int k);//calculates binomial coefficient
 		const pathMessage & getPath ();//gets the path message
 		bool findNearestFreeSpace(Pose & finalGoal, Pose & start);
 };

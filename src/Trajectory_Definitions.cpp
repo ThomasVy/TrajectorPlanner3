@@ -468,7 +468,6 @@ bool Image::planner (Pose & start, Pose & goal)
 		points.insert(points.begin(), currentPose->pose);
 		currentPose = currentPose->prePosition;
 	}
-	//points.erase(points.begin());
 	path = pathMessage(points.size());
 	for(int i =0; i<points.size();i++)
 	{
@@ -478,70 +477,8 @@ bool Image::planner (Pose & start, Pose & goal)
 		path[i].pose.position.x = points[i].x;
 		path[i].pose.position.y = points[i].y;
 	}
-	//Bezier(points); //makes the bpline curve
 	return true;
 }
-void Image::Bezier (poseVector & points, int num)
-{
-
-	int firstnum = 0;
-	int endnum = 1;
-	double result = (double)(endnum -firstnum)/(num-1);
-	doubleVector arr (num); //t = np.linspace(0, 1, num=num)
-	for(int i =0;i<num; i++)
-	{
-		arr[i] =firstnum + i*result;
-	}
-	path = pathMessage(num);
-	for(int ii =0;ii<points.size();ii++)
-	{
-		doubleVector berst = Berstein(arr, points.size()-1, ii);
-		multipleVectors(berst, points[ii]);
-	}
-	for(int i =0;i<path.size();i++)
-	{
-		path[i].header.seq = i;
-		path[i].header.stamp = ros::Time::now();
-		path[i].header.frame_id = "path";
-	}
-}
-
-void Image::multipleVectors(doubleVector & berst, Pose point)
-{
-	for(int i =0;i<berst.size();i++)
-	{
-		path[i].pose.position.x = path[i].pose.position.x + berst[i] *  point.x;
-		path[i].pose.position.y = path[i].pose.position.y + berst[i] *  point.y;
-	}
-}
-
-doubleVector Image::Berstein(doubleVector & arr, int n, int k)
-{
- 	doubleVector returnVector;
-	double coeff = binomialCoeff(n,k);
-	for(int i =0 ; i<arr.size();i++)
-	{
-		returnVector.push_back(coeff*pow(arr[i],k)*pow(1-arr[i], n-k));
-	}
-	return returnVector;
-}
-
-double Image::binomialCoeff(int n, int k)
-{
-	double C[k+1];
-	memset(C, 0, sizeof(C));
-
-	C[0] = 1;
-
-	for (int i = 1; i <= n; i++)
-	{
-		for (int j = min(i, k); j > 0; j--)
-			C[j] = C[j] + C[j-1];
-	}
-	return C[k];
-
-}
-
 const pathMessage & Image::getPath ()
 {
 	return path;
