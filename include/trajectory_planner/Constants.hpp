@@ -101,6 +101,6 @@ class Image{
 		doubleVector Berstein(doubleVector & arr, int n, int k);//Does some math
 		double binomialCoeff(int n, int k);//calculates binomial coefficient
 		const pathMessage & getPath ();//gets the path message
-		Pose findNearestFreeSpace(Pose & finalGoal, Pose & start);
+		bool findNearestFreeSpace(Pose & finalGoal, Pose & start);
 };
 #endif
