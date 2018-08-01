@@ -137,9 +137,8 @@ listOfPositions Position::lookForClosestUnknown (const matrix& walls, const Pose
 			}
 			else if(cN == -1)
 			{
-				float space = walls[pose.x][pose.y];
-				double cost = space + distanceToGoal(pose, goal)+cost;
-				unknownQueue.push(Position(pose, cost, nullptr));
+				float neighbourTotalCost = distanceToGoal(pose, goal);// calculates the total cost of moving to that spot
+				unknownQueue.push(Position(pose, neighbourTotalCost, this));
 			}
 		}
 	return neighbours;
@@ -434,10 +433,11 @@ bool Image::planner (Pose & start, Pose & goal)
 		newStart.radian = start.radian+i;
 		newStart.x = start.x+cos(newStart.radian);
 		newStart.y = start.y+sin(newStart.radian);
-		openList.push(Position(newStart, 0, 0));
+		openList.push(Position(newStart, 0, nullptr));
+
 	}
 	Pose currentPoint;// the current point being checked
-	while(distanceToGoal(currentPoint, goal)>HITBOX/2){ //keep checking if the current point is greater than 5 cells away from the goal
+	while(distanceToGoal(currentPoint, goal)>2){ //keep checking if the current point is greater than 5 cells away from the goal
 		if(openList.empty())//check if there are no moves left in the priority queue
 		{
 			return false;
@@ -457,18 +457,17 @@ bool Image::planner (Pose & start, Pose & goal)
 	}
 	if(closedList.empty()) //if the list is empty put the start and end point to the list.
 	{
-			closedList.push_back(std::unique_ptr<Position>(new Position(start, 0, 0)));
+			closedList.push_back(std::unique_ptr<Position>(new Position(start, 0, nullptr)));
 	}
 	closedList.push_back(std::unique_ptr<Position>(new Position(goal , 0, closedList.back().get()))); // push the goal to the list
 	Position *currentPose = closedList.back().get();
 	poseVector points;
 
-	while(currentPose!=0) //gets the path that made it to the goal first
+	while(currentPose!=nullptr) //gets the path that made it to the goal first
 	{
 		points.insert(points.begin(), currentPose->pose);
 		currentPose = currentPose->prePosition;
 	}
-	//points.erase(points.begin());
 	path = pathMessage(points.size());
 	for(int i =0; i<points.size();i++)
 	{
@@ -478,79 +477,16 @@ bool Image::planner (Pose & start, Pose & goal)
 		path[i].pose.position.x = points[i].x;
 		path[i].pose.position.y = points[i].y;
 	}
-	//Bezier(points); //makes the bpline curve
 	return true;
 }
-void Image::Bezier (poseVector & points, int num)
-{
-
-	int firstnum = 0;
-	int endnum = 1;
-	double result = (double)(endnum -firstnum)/(num-1);
-	doubleVector arr (num); //t = np.linspace(0, 1, num=num)
-	for(int i =0;i<num; i++)
-	{
-		arr[i] =firstnum + i*result;
-	}
-	path = pathMessage(num);
-	for(int ii =0;ii<points.size();ii++)
-	{
-		doubleVector berst = Berstein(arr, points.size()-1, ii);
-		multipleVectors(berst, points[ii]);
-	}
-	for(int i =0;i<path.size();i++)
-	{
-		path[i].header.seq = i;
-		path[i].header.stamp = ros::Time::now();
-		path[i].header.frame_id = "path";
-	}
-}
-
-void Image::multipleVectors(doubleVector & berst, Pose point)
-{
-	for(int i =0;i<berst.size();i++)
-	{
-		path[i].pose.position.x = path[i].pose.position.x + berst[i] *  point.x;
-		path[i].pose.position.y = path[i].pose.position.y + berst[i] *  point.y;
-	}
-}
-
-doubleVector Image::Berstein(doubleVector & arr, int n, int k)
-{
- 	doubleVector returnVector;
-	double coeff = binomialCoeff(n,k);
-	for(int i =0 ; i<arr.size();i++)
-	{
-		returnVector.push_back(coeff*pow(arr[i],k)*pow(1-arr[i], n-k));
-	}
-	return returnVector;
-}
-
-double Image::binomialCoeff(int n, int k)
-{
-	double C[k+1];
-	memset(C, 0, sizeof(C));
-
-	C[0] = 1;
-
-	for (int i = 1; i <= n; i++)
-	{
-		for (int j = min(i, k); j > 0; j--)
-			C[j] = C[j] + C[j-1];
-	}
-	return C[k];
-
-}
-
 const pathMessage & Image::getPath ()
 {
 	return path;
 }
-
-Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
+bool Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 {
-		Pose goal;
 		positionPriorityQueue unknownQueue; //add unknowns
+		vectorOfPointers closedList;
 		positionPriorityQueue exploreQueue;
 		matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
 		Pose currentPoint;
@@ -560,16 +496,16 @@ Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 			newStart.radian = start.radian+i;
 			newStart.x = start.x+cos(newStart.radian);
 			newStart.y = start.y+sin(newStart.radian);
-			exploreQueue.push(Position(newStart, 0, 0));
+			exploreQueue.push(Position(newStart, 0, nullptr));
 		}
 		while(!exploreQueue.empty())
 		{
-			Position temp = exploreQueue.top();
-			currentPoint =temp.pose;
+			closedList.push_back(std::unique_ptr<Position>(new Position(exploreQueue.top())));
+			currentPoint =closedList.back()->pose;;
 			if(space[currentPoint.x][currentPoint.y]==0)
 		  {
 				space[currentPoint.x][currentPoint.y] = 1;
-				std::vector<Position> neighbours =temp.lookForClosestUnknown(arena, finalGoal, unknownQueue);
+				std::vector<Position> neighbours =closedList.back()->lookForClosestUnknown(arena, finalGoal, unknownQueue);
 				for(int i =0; i<neighbours.size(); i++)
 				{
 					exploreQueue.push(neighbours[i]); //push all the neighbours to the currnt point to the priority queue
@@ -578,6 +514,26 @@ Pose Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 			exploreQueue.pop();
 		}
 		if(!unknownQueue.empty())
-			goal= unknownQueue.top().pose;
-		return goal;
+		{
+			const Position * pointer = &unknownQueue.top();
+			poseVector points;
+			while(pointer !=nullptr)
+			{
+				points.insert(points.begin(), pointer->pose);
+				pointer = pointer->prePosition;
+			}
+			path = pathMessage(points.size());
+			for(int i =0; i<points.size();i++)
+			{
+				path[i].header.seq = i+1;
+				path[i].header.stamp = ros::Time::now();
+				path[i].header.frame_id = "path";
+				path[i].pose.position.x = points[i].x;
+				path[i].pose.position.y = points[i].y;
+			}
+			return true;
+		}
+		else{
+			return false;
+		}
 }

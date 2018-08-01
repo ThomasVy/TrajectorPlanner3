@@ -40,7 +40,6 @@ void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 	goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
 	goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
 
-  ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
 	if(msg != nullptr)
 	{
 		calculations(goal);
@@ -98,18 +97,31 @@ void calculations (Pose & goal)
 	Pose last(lastx, lasty);
 	Image img(original, first, last); //creates a converted image bsaed off original map
 	img.insert_borders(); //creates cost map
-	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
-	{
-		cout<<goal.x<<" "<<goal.y<<endl;
-		Pose goal = img.findNearestFreeSpace(goal, start);
-		cout<<goal.x<<" "<<goal.y<<endl;
-	}
+
 	nav_msgs::Path path;
 	static int num =0;
 	path.header.seq = num++;
 	path.header.stamp = ros::Time::now();
 	path.header.frame_id = "path";
-	if(img.planner(start, goal)) //plans the path if it find a path it publishes it
+	ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
+	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
+	{
+		if(img.findNearestFreeSpace(goal, start))
+		{
+			ROS_INFO("Found Path");
+			path.poses = img.getPath();
+			for(int i =0; i<path.poses.size();i++)
+			{
+				path.poses[i].pose.position.x = (path.poses[i].pose.position.x*msg->info.resolution+msg->info.origin.position.x);
+				path.poses[i].pose.position.y = (path.poses[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
+			}
+		}
+		else{
+			ROS_ERROR("Could NOT find path");
+			return;
+		}
+	}
+	else if(img.planner(start, goal)) //plans the path if it find a path it publishes it
 	{
 		ROS_INFO("Found Path");
 		path.poses = img.getPath();
