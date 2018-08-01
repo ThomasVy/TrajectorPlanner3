@@ -40,7 +40,6 @@ void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 	goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
 	goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
 
-  ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
 	if(msg != nullptr)
 	{
 		calculations(goal);
@@ -104,7 +103,7 @@ void calculations (Pose & goal)
 	path.header.seq = num++;
 	path.header.stamp = ros::Time::now();
 	path.header.frame_id = "path";
-
+	ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
 	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
 	{
 		if(img.findNearestFreeSpace(goal, start))
