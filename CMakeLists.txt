@@ -109,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES trajectory_planner
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs message_runtime interactive_markers
   DEPENDS system_lib
 )
 
@@ -185,6 +185,8 @@ include_directories(
 #############
 ## Testing ##
 #############
+
+#
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_trajectory_planner.cpp)

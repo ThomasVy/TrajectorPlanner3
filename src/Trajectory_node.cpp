@@ -91,20 +91,19 @@ void calculations (Pose & goal)
 		}
 	}
 	if(lastx<firstx || lasty<firsty) //If there are no bounds.
-		{
+	{
 			return;
-	  }
-	if(original[goal.x][goal.y]!=0 || original[start.x][start.y]!=0) // if the goal or start not in free space end the path finding
-		{
-		  ROS_INFO("no. x: [%f], y: [%f], start: [%f], [%f], original goal: [%f], original start: [%f]", goal.x, goal.y, start.x, start.y, original[goal.x][goal.y], original[start.x][start.y]);
-			return;
-		}
-
-  ROS_INFO("ye");
+	}
 	Pose first(firstx, firsty);
 	Pose last(lastx, lasty);
 	Image img(original, first, last); //creates a converted image bsaed off original map
 	img.insert_borders(); //creates cost map
+	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
+	{
+		cout<<goal.x<<" "<<goal.y<<endl;
+		Pose goal = img.findNearestFreeSpace(goal, start);
+		cout<<goal.x<<" "<<goal.y<<endl;
+	}
 	nav_msgs::Path path;
 	static int num =0;
 	path.header.seq = num++;

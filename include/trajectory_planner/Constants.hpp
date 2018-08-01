@@ -22,11 +22,12 @@ struct Pose;
 const int PRECISION = 100; //The number of dots for the bspline curve
 const int UNKNOWN =-2; //The unknown space value
 const int WALL=-1; //The wall space value
+const int WILLCOLIDE = -3;
 const int EMPTY_SPACE =1; //The empty space value
-const int RESOLUTION = 10; //The distance from wall to calculate(for cost)
-const float LENGTH = 2; //The distance between points(higher number = fast computation but inaccurate path)
-const float CURVATURE = 0.1; //The curvature the robot takes
-
+const int RESOLUTION = 4; //The distance from wall to calculate(for cost)
+const float LENGTH = 3; //The distance between points(higher number = fast computation but inaccurate path)
+const float CURVATURE = 0.2; //The curvature the robot takes
+const float HITBOX = 9; // the hit box of the robot
 //The typedefs
 typedef vector< vector<double> > matrix; //Holds the map cells
 typedef vector<geometry_msgs::PoseStamped> pathMessage;//The path message
@@ -55,6 +56,7 @@ typedef struct Pose{
 	Pose(double x, double y):x(x),y(y),radian(0){}; //Constructor
 	Pose(const Pose & rhs); //Copy Constructor
 	Pose& operator=(const Pose & rhs); //Assignment operator
+	bool operator==(const Pose &rhs); //Comparing operator
 	Pose endPose(float curvature, float length); //Calculating end position for a path
 
 }Pose;
@@ -73,8 +75,11 @@ class Position{
 		Position():cost(0),total_cost(0){} //default constructor
 		Position& operator=(const Position & rhs);//assignment operator
 		bool operator>(Position const& right) const {return total_cost > right.total_cost;}// comparing for the priority queue
-		listOfPositions getNeighbours (const matrix & walls, const Pose & goal, const Pose & first, const Pose &last);// gets the neighbours of this position
-		bool checkNeighbour (const Pose & current, const Pose & next,const matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
+		listOfPositions getNeighbours (const matrix & walls, const Pose & goal);// gets the neighbours of this position
+
+
+		listOfPositions lookForClosestUnknown (const matrix & walls, const Pose & goal, positionPriorityQueue & unknownQueue);
+		int checkNeighbour (const Pose & current, const Pose & next,const matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
 };
 
 //Hold the image grids and do calculations for them
@@ -96,5 +101,6 @@ class Image{
 		doubleVector Berstein(doubleVector & arr, int n, int k);//Does some math
 		double binomialCoeff(int n, int k);//calculates binomial coefficient
 		const pathMessage & getPath ();//gets the path message
+		Pose findNearestFreeSpace(Pose & finalGoal, Pose & start);
 };
 #endif
