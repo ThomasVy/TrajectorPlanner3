@@ -4,12 +4,14 @@ Date: June 12, 2018
 
 Credit to Gayan Brahmanage for the formulation of the path planner first in his python code. Thanks Gayan!
 
-Highly recommended that your run rviz to see the path planned 
+This package requires that you have ros kinetic, gmapping, rviz, drrobot_jaguar4x4_player(git@github.com:ThomasVy/drrobot_jaguar4x4_player.git), and tf packages
 
-how to install:
+how to install and run:
 	1. clone trajectory_planner to your catkin_workspace
 	2. run "catkin_make" in the command line
-	3. type in "roslaunch trajectory_planner trajectory.launch
+	3. drrobot_jaguar4x4_player should be running (I suggest running "roslaunch drrobot_jaguar4x4_player  			   H20base_player_basic.launch")
+	4. gmapping should be running (I suggest running "roslaunch drrobot_jaguar4x4_player H20gmap.launch")
+	3. type in "roslaunch trajectory_planner trajectory.launch"
 	4. rviz should pop up and you will be able to drag the goal to any location on the map and path will be created
 
 The trajectory planner will determine the path from the current position of the robot to the goal mark placed by the user. If a path can be create, it will spit out the shortest path available to the topic "/path" and spit out "Found Path" to terminal, otherwise it will print "Could Not Find Path" in terminal. If the goal marker is placed in an unknown area, the program will try to find the closest possible unknown spot(relative to the goal) in map.
