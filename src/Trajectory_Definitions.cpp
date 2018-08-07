@@ -140,7 +140,7 @@ listOfPositions Position::lookForClosestUnknown (const matrix& walls, const Pose
 				float neighbourTotalCost = distanceToGoal(pose, goal);// calculates the total cost of moving to that spot
 				unknownQueue.push(Position(pose, neighbourTotalCost, this));
 			}
-		}
+	}
 	return neighbours;
 }
 int Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)

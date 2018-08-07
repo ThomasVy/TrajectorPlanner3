@@ -36,12 +36,10 @@ void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 	Pose goal;
   goal.x = orimsg->position.x; //Stores goal marker so we don't get seg faults
 	goal.y = orimsg->position.y;
-
-	goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
-	goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
-
 	if(msg != nullptr)
 	{
+		goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
+		goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
 		calculations(goal);
 	}
 }

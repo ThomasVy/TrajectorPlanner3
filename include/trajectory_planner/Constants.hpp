@@ -19,15 +19,15 @@ struct Wall;
 struct Pose;
 
 //Constants
-const int PRECISION = 100; //The number of dots for the bspline curve
-const int UNKNOWN =-2; //The unknown space value
-const int WALL=-1; //The wall space value
-const int WILLCOLIDE = -3;
-const int EMPTY_SPACE =1; //The empty space value
-const int RESOLUTION = 4; //The distance from wall to calculate(for cost)
-const float LENGTH = 3; //The distance between points(higher number = fast computation but inaccurate path)
-const float CURVATURE = 0.2; //The curvature the robot takes
-const float HITBOX = 9; // the hit box of the robot
+#define PRECISION  100 //The number of dots for the bspline curve
+#define UNKNOWN 2 //The unknown space value
+#define WALL 1 //The wall space value
+#define WILLCOLIDE -3
+#define EMPTY_SPACE 1 //The empty space value
+#define RESOLUTION 4 //The distance from wall to calculate(for cost)
+#define LENGTH 3//The distance between points(higher number = fast computation but inaccurate path)
+#define CURVATURE 0.2 //The curvature the robot takes
+#define HITBOX 9 // the hit box of the robot
 //The typedefs
 typedef vector< vector<double> > matrix; //Holds the map cells
 typedef vector<geometry_msgs::PoseStamped> pathMessage;//The path message
@@ -62,7 +62,7 @@ typedef struct Pose{
 }Pose;
 //The position class for points on the map
 class Position{
-	friend class Image;
+	friend class Image; //makes it so that Image can see Position's private elements
 	private:
 		float cost; //The cost of that position
 		float total_cost; //The total cost of moving to that position
@@ -74,7 +74,7 @@ class Position{
 		Position(const Position & rhs);//copy constructor
 		Position():cost(0),total_cost(0){} //default constructor
 		Position& operator=(const Position & rhs);//assignment operator
-		bool operator>(Position const& right) const {return total_cost > right.total_cost;}// comparing for the priority queue
+		bool operator>(const Position & right) const {return total_cost > right.total_cost;}// comparing for the priority queue
 		listOfPositions getNeighbours (const matrix & walls, const Pose & goal);// gets the neighbours of this position
 
 
