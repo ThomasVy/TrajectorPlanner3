@@ -8,11 +8,21 @@ Highly recommended that your run rviz to see the path planned
 
 how to install:
 	1. clone trajectory_planner to your catkin_workspace
-	2. change your goal to match the occupancy grid location 
-	2. do catkin_make
-	3. Run your robot or clone dataset_reader from git@github.com:ThomasVy/datareader.git 
-	4. Run your gmapping with dataset_reader ro your robot
-	6. Run trajectory_planner by typing "rosrun trajectory_planner traject"
+	2. run "catkin_make" in the command line
+	3. type in "roslaunch trajectory_planner trajectory.launch
+	4. rviz should pop up and you will be able to drag the goal to any location on the map and path will be created
+
+The trajectory planner will determine the path from the current position of the robot to the goal mark placed by the user. If a path can be create, it will spit out the shortest path available to the topic "/path" and spit out "Found Path" to terminal, otherwise it will print "Could Not Find Path" in terminal. If the goal marker is placed in an unknown area, the program will try to find the closest possible unknown spot(relative to the goal) in map.
+
+Change "HITBOX" constant in "include/trajectory_planner/Constants.hpp" to change the hitbox of the robot.
+Change "LENGTH" constant in "include/trajectory_planner/Constants.hpp" to change the distance of the points in the path.
+Change "CURVATURE" constant in " include/trajectory_planner/Constants.hpp" to change the amount the path can turn.
+Change "RESOLUTION" constant in "include/trajectory_planner/Constants.hpp" to change the "cost_map" calculations gradient" 
+	
+
+	
+
+	
 
 
 Implementation:
