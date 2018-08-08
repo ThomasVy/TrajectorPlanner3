@@ -29,14 +29,13 @@ void sendTransform()
 			tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, 0.0)),   // map and path do need need to be tranformed.
 				ros::Time::now(), "map", "path" ));
 }
-//publishes the path to /path
-
+//gets a goal position
 void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 {
 	Pose goal;
   goal.x = orimsg->position.x; //Stores goal marker so we don't get seg faults
 	goal.y = orimsg->position.y;
-	if(msg != nullptr)
+	if(msg != nullptr)//if goal was called and there is a map avaliable then start the path planning.
 	{
 		goal.x = (goal.x - (int)msg->info.origin.position.x) / msg->info.resolution; //Changes goal marker real position to grid
 		goal.y = (goal.y - (int)msg->info.origin.position.y) / msg->info.resolution; //Changes goal marker real position to grid
@@ -44,11 +43,12 @@ void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 	}
 }
 
+//if a map message is given, then update the map avaliable.
 void publishInfo(const nav_msgs::OccupancyGrid::ConstPtr& orginalmsg)
 {
 	msg = orginalmsg;
 }
-
+//starts the calculations for the path planner
 void calculations (Pose & goal)
 {
 	tf::StampedTransform transform;
@@ -104,7 +104,7 @@ void calculations (Pose & goal)
 	ROS_INFO("Goal Coordinates -  x: [%f] y: [%f]", goal.x, goal.y);
 	if(original[goal.x][goal.y]!=0) // Cannot reach the goal position at the moment
 	{
-		if(img.findNearestFreeSpace(goal, start))
+		if(img.findNearestFreeSpace(goal, start)) //finds the nearest unknown space and creates a path to that location
 		{
 			ROS_INFO("Found Path");
 			path.poses = img.getPath();
@@ -114,7 +114,7 @@ void calculations (Pose & goal)
 				path.poses[i].pose.position.y = (path.poses[i].pose.position.y*msg->info.resolution+msg->info.origin.position.y);
 			}
 		}
-		else{
+		else{ //There is no unknown avaliable
 			ROS_ERROR("Could NOT find path");
 			return;
 		}

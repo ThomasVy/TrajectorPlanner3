@@ -78,7 +78,7 @@ class Position{
 		listOfPositions getNeighbours (const matrix & walls, const Pose & goal);// gets the neighbours of this position
 
 
-		listOfPositions lookForClosestUnknown (const matrix & walls, const Pose & goal, positionPriorityQueue & unknownQueue);
+		listOfPositions lookForClosestUnknown (const matrix & walls, const Pose & goal, positionPriorityQueue & unknownQueue); //looks for neighbours(neighbours are free spaces and returning the neighbours. If an unknown is encountered then it is placed in the unknown queue with the distance away from goal.
 		int checkNeighbour (const Pose & current, const Pose & next,const matrix & walls);// checks the neighbour if it is a valid spot(doesn't cross through a wall)
 };
 
@@ -97,6 +97,6 @@ class Image{
 		vector<bool> checkSpace (int i, int j);//checks spaces around a wall to see which direction is open space
 		bool planner (Pose & start, Pose & goal);//plans the path for the map
 		const pathMessage & getPath ();//gets the path message
-		bool findNearestFreeSpace(Pose & finalGoal, Pose & start);
+		bool findNearestFreeSpace(Pose & finalGoal, Pose & start); //tries to find a path to the closest unknown to the goal
 };
 #endif
