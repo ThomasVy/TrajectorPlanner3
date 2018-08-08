@@ -16,6 +16,7 @@ how to install and run:
 
 The trajectory planner will determine the path from the current position of the robot to the goal mark placed by the user. If a path can be create, it will spit out the shortest path available to the topic "/path" and spit out "Found Path" to terminal, otherwise it will print "Could Not Find Path" in terminal. If the goal marker is placed in an unknown area, the program will try to find the closest possible unknown spot(relative to the goal) in map.
 
+
 Change "HITBOX" constant in "include/trajectory_planner/Constants.hpp" to change the hitbox of the robot.
 
 Change "LENGTH" constant in "include/trajectory_planner/Constants.hpp" to change the distance of the points in the path.
@@ -29,9 +30,7 @@ Change "LOOKAHEAD" constant in "include/trajectory_planner/Constants.hpp" to cha
 	
 
 	
-
-
 Implementation:
-	The implmentation of the trajectory planner is created by it recieving an occupancy grid given by gmapping over ros and turning the occupancy grid into a 2d matrix. The 2d matrix is then converted to a map that contains values for empty space, walls, and unknown parameters. The trajectory planner then uses the converted map to make a cost map. The planning of the map starts with the current position of the robot as the start and the goal on the cost map (These can be any points as you desire as long as the points are in an empty space). The planner then uses an A* algorithm to plan for the path of the robot. The planner starts with the robot's current position then calculates the next valid positions(straight, left curve, and right curve) and calculates their respective costs and places them in a priority queue. The planner then places the old position into a vector and grabs the next lowest cost from the priority queue and tries to find valid the neighbours for that position. If the priority queue becomes empty, then there is no valid path to the goal. The planner continues that process until the current position to goal is less than 5 cells. Then we grab the point that found its way to the goal first and back track it. The path is then published with the correct information along with the transform of the path to the map. 
+	The implmentation of the trajectory planner is created by it recieving an occupancy grid given by gmapping over ros and turning the occupancy grid into a 2d matrix. The 2d matrix is then converted to a map that contains values for empty space, walls, and unknown parameters. The trajectory planner then uses the converted map to make a cost map based off the position on the walls. The planning of the map starts with the current position of the robot as the start and the goal on the cost map. If the goal is in an unknown position, then the path planner will plan a path to explore the area until the goal is reachable. The planner uses an A* algorithm to plan for the path of the robot. The planner starts with the robot's current position then calculates the next valid positions based on the curvature set by the user in the "Constants.hpp" and calculates their respective costs and places them in a priority queue. The planner then places the old position into a vector and grabs the next lowest cost from the priority queue and tries to find valid the neighbours for that position. If the priority queue becomes empty, then there is no valid path to the goal. The planner continues that process until the current position to goal is less than the look ahead that is set by the user in "Constants.hpp." Then we grab the point that found its way to the goal first and back track it. The path is then published with the correct information along with the transform of the path to the map. 
 
 	
