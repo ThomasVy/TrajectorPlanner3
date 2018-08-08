@@ -9,7 +9,7 @@
 	email:thomas.vy@ucalgary.ca
 	*/
 
-//calculates the calcDistance from two poses
+//calculates the distance from two poses
 float calcDistance(const Pose & pose, const Pose & goal)
 {
 			float dx = goal.x - pose.x;

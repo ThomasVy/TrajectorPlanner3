@@ -32,6 +32,7 @@ void sendTransform()
 //gets a goal position
 void b_cCallback(const geometry_msgs::Pose::ConstPtr& orimsg)
 {
+cout<<"hello"<<endl;
 	Pose goal;
   goal.x = orimsg->position.x; //Stores goal marker so we don't get seg faults
 	goal.y = orimsg->position.y;

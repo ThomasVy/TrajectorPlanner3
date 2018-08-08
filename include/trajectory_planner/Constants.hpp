@@ -20,8 +20,8 @@ struct Pose;
 
 //Constants
 #define PRECISION  100 //The number of dots for the bspline curve
-#define UNKNOWN 2 //The unknown space value
-#define WALL 1 //The wall space value
+#define UNKNOWN -2 //The unknown space value
+#define WALL -1 //The wall space value
 #define WILLCOLIDE -3
 #define EMPTY_SPACE 1 //The empty space value
 #define RESOLUTION 4 //The distance from wall to calculate(for cost)
