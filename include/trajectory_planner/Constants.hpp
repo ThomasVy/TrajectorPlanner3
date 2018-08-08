@@ -28,6 +28,7 @@ struct Pose;
 #define LENGTH 3//The distance between points(higher number = fast computation but inaccurate path)
 #define CURVATURE 0.2 //The curvature the robot takes
 #define HITBOX 9 // the hit box of the robot
+#define LOOKAHEAD 1 //The distance from the goal and the final point on the path
 //The typedefs
 typedef vector< vector<double> > matrix; //Holds the map cells
 typedef vector<geometry_msgs::PoseStamped> pathMessage;//The path message
