@@ -437,7 +437,7 @@ bool Image::planner (Pose & start, Pose & goal)
 
 	}
 	Pose currentPoint;// the current point being checked
-	while(distanceToGoal(currentPoint, goal)>2){ //keep checking if the current point is greater than 5 cells away from the goal
+	while(distanceToGoal(currentPoint, goal)>3){ //keep checking if the current point is greater than 5 cells away from the goal
 		if(openList.empty())//check if there are no moves left in the priority queue
 		{
 			return false;
