@@ -8,7 +8,9 @@
 	Date: June 12 2018
 	email:thomas.vy@ucalgary.ca
 	*/
-float distanceToGoal(const Pose & pose, const Pose & goal)
+
+//calculates the calcDistance from two poses
+float calcDistance(const Pose & pose, const Pose & goal)
 {
 			float dx = goal.x - pose.x;
 			float dy = goal.y - pose.y;
@@ -68,7 +70,8 @@ Pose Pose::endPose(float curvature, float length)
 	}
 	return pose;
 }
-//Position class Definitions
+
+//Position class definitions
 Position::Position(Pose & pose, float total_cost, float cost, Position * prePosition)
 {
 	this->pose = pose;
@@ -113,7 +116,7 @@ listOfPositions Position::getNeighbours (const matrix & walls, const Pose & goal
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
 					float temp = LENGTH + abs(i)*3*LENGTH;
 					float new_cost = cost + temp;
-					float neighbourTotalCost = distanceToGoal(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
+					float neighbourTotalCost = calcDistance(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
 					neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));// pushes it in the list of potential positions to move
 			}
 	}
@@ -132,15 +135,15 @@ listOfPositions Position::lookForClosestUnknown (const matrix& walls, const Pose
 					float space = walls[(int)newPoint.x][(int)newPoint.y];
 					float temp = LENGTH + abs(i)*3*LENGTH;
 					float new_cost = cost + temp;
-					float neighbourTotalCost = distanceToGoal(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
+					float neighbourTotalCost = calcDistance(newPoint, goal) + new_cost + space;// calculates the total cost of moving to that spot
 					neighbours.push_back(Position(newPoint, neighbourTotalCost, new_cost, this));// pushes it in the list of potential positions to move
 			}
 			else if(cN == -1)
 			{
-				float neighbourTotalCost = distanceToGoal(pose, goal);// calculates the total cost of moving to that spot
+				float neighbourTotalCost = calcDistance(pose, goal);
 				unknownQueue.push(Position(pose, neighbourTotalCost, this));
 			}
-		}
+	}
 	return neighbours;
 }
 int Position::checkNeighbour (const Pose & current, const Pose & next, const matrix & walls)
@@ -172,7 +175,7 @@ int Position::checkNeighbour (const Pose & current, const Pose & next, const mat
 		}
 			return 1;
 	}
-	else
+	else // diagonal movement
 	{
 		for(double x = incrementx, y = incrementy; fabs(x)<=fabs(diffx); x+=incrementx, y+= incrementy)
 		{
@@ -427,7 +430,7 @@ bool Image::planner (Pose & start, Pose & goal)
 	if (arena.size() == 0 ||arena[0].size()==0) //checks if the size is valid
 				return false;
 	matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
-	for(double i = 0; i<2*M_PI; i+=M_PI/6)
+	for(double i = 0; i<2*M_PI; i+=M_PI/6) //fills the queue with 6 angles from the start
 	{
 		Pose newStart;
 		newStart.radian = start.radian+i;
@@ -437,7 +440,7 @@ bool Image::planner (Pose & start, Pose & goal)
 
 	}
 	Pose currentPoint;// the current point being checked
-	while(distanceToGoal(currentPoint, goal)>3){ //keep checking if the current point is greater than 5 cells away from the goal
+	while(calcDistance(currentPoint, goal)>LOOKAHEAD){ //keep checking if the current point is greater than 5 cells away from the goal
 		if(openList.empty())//check if there are no moves left in the priority queue
 		{
 			return false;
@@ -485,12 +488,12 @@ const pathMessage & Image::getPath ()
 }
 bool Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 {
-		positionPriorityQueue unknownQueue; //add unknowns
-		vectorOfPointers closedList;
-		positionPriorityQueue exploreQueue;
+		positionPriorityQueue unknownQueue; //The unknown priority queue
+		vectorOfPointers closedList; //The visited spots
+		positionPriorityQueue exploreQueue;//The next avaliable locations
 		matrix space(arena.size(), std::vector<double>(arena[0].size())); //the grid to check if the space has been visited already
 		Pose currentPoint;
-		for(double i = 0; i<2*M_PI; i+=M_PI/6)
+		for(double i = 0; i<2*M_PI; i+=M_PI/6) //fills queue with 6 starting angles from the start
 		{
 			Pose newStart;
 			newStart.radian = start.radian+i;
@@ -498,7 +501,7 @@ bool Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 			newStart.y = start.y+sin(newStart.radian);
 			exploreQueue.push(Position(newStart, 0, nullptr));
 		}
-		while(!exploreQueue.empty())
+		while(!exploreQueue.empty()) //go through all possible locations until there is no more places avaliable
 		{
 			closedList.push_back(std::unique_ptr<Position>(new Position(exploreQueue.top())));
 			currentPoint =closedList.back()->pose;;
@@ -513,7 +516,7 @@ bool Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 			}
 			exploreQueue.pop();
 		}
-		if(!unknownQueue.empty())
+		if(!unknownQueue.empty()) //unknowns have been found
 		{
 			const Position * pointer = &unknownQueue.top();
 			poseVector points;
@@ -533,7 +536,7 @@ bool Image::findNearestFreeSpace(Pose & finalGoal, Pose & start)
 			}
 			return true;
 		}
-		else{
+		else{ //no unknown found
 			return false;
 		}
 }
